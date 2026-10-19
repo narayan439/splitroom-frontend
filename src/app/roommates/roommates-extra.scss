@@ -1,0 +1,52 @@
+app-roommates {
+  .absence-dates {
+    display: grid;
+    gap: 4px;
+    margin-top: 9px;
+    color: #64748b;
+    font-size: 11px;
+
+    strong {
+      color: #334155;
+      font-weight: 600;
+    }
+  }
+
+  .absence-form,
+  .return-date-controls {
+    width: min(100%, 370px);
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fbfcfd;
+
+    h4 {
+      margin: 0 0 12px;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    > label {
+      display: block;
+      margin-bottom: 7px;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    > input[type='date'] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 9px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      color: #334155;
+      background: #fff;
+      font-size: 12px;
+    }
+  }
+
+  .return-date-actions {
+    margin-top: 10px;
+  }
+}

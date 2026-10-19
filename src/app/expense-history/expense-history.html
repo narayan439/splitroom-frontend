@@ -1,0 +1,91 @@
+<div class="history-page">
+
+  <header class="page-header">
+    <div>
+      <h1>Expense History</h1>
+      <p>View and track your shared room expenses.</p>
+    </div>
+
+    <!-- <a routerLink="/add-expense" class="add-button">
+      + Add Expense
+    </a> -->
+  </header>
+
+  <section class="summary-card">
+    <p>Total Expenses</p>
+    <h2>{{ totalAmount | currency:'INR':'symbol':'1.0-2' }}</h2>
+    <span>{{ filteredExpenses.length }} expenses found</span>
+  </section>
+
+  <section class="filters">
+
+    <input
+      type="text"
+      placeholder="Search expense or payer..."
+      [(ngModel)]="searchText"
+    />
+
+    <select [(ngModel)]="selectedCategory">
+      <option value="All">All Categories</option>
+
+      <option
+        *ngFor="let category of categories"
+        [value]="category"
+      >
+        {{ category }}
+      </option>
+    </select>
+
+  </section>
+
+  <section class="expense-list">
+
+    <article
+      class="expense-card"
+      *ngFor="let expense of filteredExpenses"
+    >
+
+      <div class="expense-info">
+        <h3>{{ expense.title }}</h3>
+        <p>{{ expense.category }}</p>
+        <small>
+          Paid by {{ expense.paidBy }} ·
+          {{ expense.date | date:'dd MMM yyyy' }}
+        </small>
+      </div>
+
+      <div class="expense-amount">
+        <h3>{{ expense.amount | currency:'INR':'symbol':'1.0-2' }}</h3>
+
+        <small>
+          {{ expense.roommates.length }} roommates
+        </small>
+
+        <p>
+          Per person:
+          {{ getShare(expense) | currency:'INR':'symbol':'1.0-2' }}
+        </p>
+      </div>
+
+      <div class="share-details">
+        <h4>Roommate Shares</h4>
+        <div *ngFor="let item of getShares(expense)">
+          <span>{{ item.roommate }}</span>
+          <strong>
+            {{ item.share | currency:'INR':'symbol':'1.2-2' }}
+          </strong>
+        </div>
+        <p class="no-shares" *ngIf="getShares(expense).length === 0">
+          No roommates are assigned to this expense.
+        </p>
+      </div>
+
+    </article>
+
+    <p class="empty-message" *ngIf="filteredExpenses.length === 0">
+      No expenses found.
+    </p>
+
+  </section>
+
+</div>

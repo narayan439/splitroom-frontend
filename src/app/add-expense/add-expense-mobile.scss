@@ -1,0 +1,115 @@
+@media (max-width: 600px) {
+  app-add-expense {
+    .page {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 12px auto;
+      padding: 14px;
+    }
+
+    .page-header {
+      margin-bottom: 18px;
+
+      h1 {
+        font-size: 26px;
+      }
+    }
+
+    .expense-card {
+      padding: 18px;
+      border-radius: 12px;
+    }
+
+    .form-group {
+      gap: 8px;
+      margin-bottom: 18px;
+
+      input,
+      select {
+        min-height: 46px;
+        padding: 11px 12px;
+        font-size: 16px;
+      }
+    }
+
+    .split-group {
+      padding: 14px;
+    }
+
+    .split-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .split-heading__copy {
+      h2 {
+        font-size: 16px;
+        line-height: 1.35;
+      }
+
+      p {
+        font-size: 11px;
+        line-height: 1.5;
+      }
+    }
+
+    .split-count {
+      padding: 6px 9px;
+    }
+
+    .split-option {
+      align-items: center;
+      padding: 12px;
+
+      strong {
+        font-size: 12px;
+      }
+
+      small {
+        font-size: 11px;
+      }
+    }
+
+    .roommate-item {
+      min-height: 46px;
+    }
+
+    .share-summary {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px;
+      margin: 18px 0;
+
+      strong {
+        font-size: 17px;
+      }
+    }
+
+    .save-button {
+      min-height: 48px;
+    }
+
+    .error-message,
+    .success-message {
+      line-height: 1.45;
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  app-add-expense {
+    .page {
+      padding: 10px;
+    }
+
+    .expense-card {
+      padding: 14px;
+    }
+
+    .split-group {
+      padding: 12px;
+    }
+  }
+}

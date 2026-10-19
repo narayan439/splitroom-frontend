@@ -1,0 +1,167 @@
+<div class="page">
+
+  <header class="page-header">
+    <div>
+      <p class="subtitle">ROOM EXPENSES</p>
+      <h1>Add Expense</h1>
+      <p class="help-text">
+        Record a shared expense for your room.
+      </p>
+    </div>
+  </header>
+
+  <main class="expense-card">
+
+    <!-- Expense title -->
+    <div class="form-group">
+      <label for="title">Expense Title</label>
+      <input
+        id="title"
+        type="text"
+        [(ngModel)]="title"
+        placeholder="e.g. Monthly electricity bill"
+      />
+    </div>
+
+    <!-- Category -->
+    <div class="form-group">
+      <label for="category">Category</label>
+
+      <select
+        id="category"
+        [(ngModel)]="category"
+        (ngModelChange)="updateEligibleRoommates()"
+      >
+        <option *ngFor="let item of categories" [value]="item">
+          {{ item }}
+        </option>
+      </select>
+
+      <!-- Custom category input -->
+      <input
+        *ngIf="category === 'Other'"
+        type="text"
+        [(ngModel)]="customCategory"
+        (ngModelChange)="updateEligibleRoommates()"
+        placeholder="Enter your expense category"
+      />
+    </div>
+
+    <!-- Amount -->
+    <div class="form-group">
+      <label for="amount">Total Amount (₹)</label>
+      <input
+        id="amount"
+        type="number"
+        min="1"
+        [(ngModel)]="amount"
+        placeholder="Enter amount"
+      />
+    </div>
+
+    <!-- Paid by -->
+    <div class="form-group">
+      <label for="paidBy">Paid By</label>
+
+      <select
+        id="paidBy"
+        [(ngModel)]="paidBy"
+        (ngModelChange)="updateEligibleRoommates()"
+      >
+        <option
+          *ngFor="let roommate of presentRoommates"
+          [value]="roommate.name"
+        >
+          {{ roommate.name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Date -->
+    <div class="form-group">
+      <label for="date">Expense Date</label>
+      <input
+        id="date"
+        type="date"
+        [(ngModel)]="expenseDate"
+        (ngModelChange)="updateEligibleRoommates()"
+      />
+    </div>
+
+    <!-- Who shares -->
+    <section class="form-group split-group" aria-labelledby="split-heading">
+      <div class="split-heading">
+        <div class="split-heading__copy">
+          <span class="split-heading__step">SPLIT DETAILS</span>
+          <h2 id="split-heading">Who shares this expense?</h2>
+          <p>Choose how this expense is divided between roommates.</p>
+        </div>
+        <span class="split-count">
+          <span aria-hidden="true" class="split-count__icon">✓</span>
+          {{ selectedRoommates.length }} included
+        </span>
+      </div>
+
+      <div class="split-selection">
+        <div aria-current="true" class="split-option split-option--selected">
+          <span aria-hidden="true" class="split-option__check">✓</span>
+          <span>
+            <strong>Select roommates</strong>
+            <small>Choose which eligible roommates share this expense</small>
+          </span>
+        </div>
+      </div>
+
+      <!-- Ineligible roommates remain visible so the active rule is clear. -->
+      <div class="roommate-list">
+
+        <label
+          class="roommate-item"
+          *ngFor="let roommate of roommates"
+        >
+          <input
+            type="checkbox"
+            [(ngModel)]="roommate.selected"
+            [ngModelOptions]="{ standalone: true }"
+            [disabled]="!eligibleRoommates.includes(roommate.name)"
+          />
+
+          <span>
+            {{ roommate.name }}
+            <small *ngIf="!eligibleRoommates.includes(roommate.name)">
+              Not eligible
+            </small>
+          </span>
+        </label>
+
+      </div>
+    </section>
+
+    <!-- Split summary -->
+    <div class="share-summary">
+      <span>
+        {{ selectedRoommates.length }} roommates sharing
+      </span>
+
+      <strong>
+        {{ sharePerPerson | currency:'INR':'symbol':'1.2-2' }}
+        per person
+      </strong>
+    </div>
+
+    <!-- Messages -->
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="success-message" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <!-- Save -->
+    <button class="save-button" (click)="saveExpense()">
+      Save Expense
+    </button>
+
+  </main>
+</div>

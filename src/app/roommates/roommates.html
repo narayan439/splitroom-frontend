@@ -1,0 +1,188 @@
+<div class="page">
+
+  <header class="page-header">
+    <div>
+      <p class="subtitle">ROOM MANAGEMENT</p>
+      <h1>Roommates</h1>
+      <p class="help-text">
+        Manage your room members and their status.
+      </p>
+    </div>
+
+    <button class="add-button" (click)="showForm = !showForm">
+      + Add Roommate
+    </button>
+  </header>
+
+  <!-- Add roommate form -->
+  <section class="form-card" *ngIf="showForm">
+
+    <h2>Add New Roommate</h2>
+
+    <div class="form-group">
+      <label for="name">Full Name</label>
+      <input
+        id="name"
+        type="text"
+        [(ngModel)]="newName"
+        placeholder="Enter roommate name"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        [(ngModel)]="newEmail"
+        placeholder="Enter roommate email"
+      />
+    </div>
+
+    <button class="save-button" (click)="addRoommate()">
+      Save Roommate
+    </button>
+
+  </section>
+
+  <!-- Messages -->
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="success-message" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <!-- Room summary -->
+  <section class="summary-card">
+    <div>
+      <p>Total Roommates</p>
+      <h2>{{ roommates.length }}</h2>
+    </div>
+
+    <div>
+      <p>Currently Active</p>
+      <h2>{{ activeCount }}</h2>
+    </div>
+  </section>
+
+  <!-- Roommate list -->
+  <section class="roommate-section">
+
+    <h2>All Roommates</h2>
+
+    <div class="roommate-card" *ngFor="let roommate of roommates">
+
+      <div class="avatar">
+        {{ roommate.name.charAt(0) }}
+      </div>
+
+      <div class="roommate-info">
+        <h3>{{ roommate.name }}</h3>
+        <p>{{ roommate.email }}</p>
+
+        <span
+          class="status"
+          [class.active]="roommate.status === 'Active'"
+          [class.away]="roommate.status === 'Temporarily Absent'"
+        >
+          {{ roommate.status }}
+        </span>
+        <div class="absence-dates" *ngIf="roommate.departureDate">
+          <span>
+            Departure date:
+            <strong>{{ roommate.departureDate | date:'d MMMM yyyy' }}</strong>
+          </span>
+          <span>
+            Return date:
+            @if (roommate.returnDate) {
+              <strong>{{ roommate.returnDate | date:'d MMMM yyyy' }}</strong>
+            } @else {
+              <strong>Not recorded</strong>
+            }
+          </span>
+        </div>
+      </div>
+
+      <div class="balance">
+        <p>Balance</p>
+
+        <strong [class.positive]="roommate.balance < 0">
+          {{ roommate.balance | currency:'INR':'symbol':'1.0-0' }}
+        </strong>
+      </div>
+
+      <div class="away-controls">
+        <button
+          *ngIf="roommate.status === 'Active'"
+          class="status-button"
+          type="button"
+          (click)="beginAbsence(roommate)"
+        >
+          Mark Absent
+        </button>
+
+        @if (absenceFormRoommateId === roommate.id) {
+          <div class="absence-form">
+            <h4>Mark {{ roommate.name }} absent</h4>
+            <label [for]="'departure-date-' + roommate.id">Actual departure date</label>
+            <input
+              [id]="'departure-date-' + roommate.id"
+              type="date"
+              [max]="today"
+              [(ngModel)]="absenceDrafts[roommate.id].departureDate"
+            />
+
+            <div class="return-date-actions">
+              <button
+                class="status-button status-button--returned"
+                type="button"
+                (click)="confirmAbsence(roommate)"
+              >
+                Confirm Absence
+              </button>
+              <button class="status-button" type="button" (click)="cancelAbsence()">Cancel</button>
+            </div>
+          </div>
+        }
+
+        @if (roommate.status === 'Temporarily Absent') {
+          @if (returnFormRoommateId === roommate.id) {
+            <div class="return-date-controls">
+              <label [for]="'return-date-' + roommate.id">Actual return date</label>
+              <input
+                [id]="'return-date-' + roommate.id"
+                type="date"
+                [min]="roommate.departureDate"
+                [max]="today"
+                [(ngModel)]="returnDateDrafts[roommate.id]"
+              />
+              <div class="return-date-actions">
+                <button
+                  class="status-button status-button--returned"
+                  type="button"
+                  (click)="confirmReturn(roommate)"
+                >
+                  Save Return Date
+                </button>
+                <button class="status-button" type="button" (click)="cancelReturn()">Cancel</button>
+              </div>
+            </div>
+          } @else {
+            <button
+              class="status-button"
+              type="button"
+              (click)="beginReturn(roommate)"
+            >
+              Mark Returned
+            </button>
+          }
+        }
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
