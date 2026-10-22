@@ -1,304 +1,239 @@
-import { Component } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { defer, map, of, switchMap, timeout } from 'rxjs';
+import { AuthService } from '../auth/auth.service';
 import {
-  AbsenceSharingRules,
-  ExpenseService
-} from '../services/expense.service';
-
-export interface Roommate {
-  id: number;
-  name: string;
-  email: string;
-  status: 'Active' | 'Temporarily Absent';
-  balance: number;
-  departureDate: string;
-  returnDate: string;
-  sharedCategories: string[];
-  absenceSharing: AbsenceSharingRules;
-}
-
-interface AbsenceDraft {
-  departureDate: string;
-}
+  RentCycleMemberPaymentStatus,
+  RentCycleSummary,
+  RoomDetails,
+  RoomMember,
+} from '../rooms/room.models';
+import { RoomService } from '../rooms/room.service';
 
 @Component({
   selector: 'app-roommates',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './roommates.html',
-  styleUrl: './roommates.scss'
+  styleUrl: './roommates.scss',
 })
-export class RoommatesComponent {
-  constructor(private readonly expenseService: ExpenseService) {
-    this.loadRoommateRules();
-    this.syncRoommateRules();
-  }
+export class RoommatesComponent implements OnInit {
+  private readonly roomsApi = inject(RoomService);
+  private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly auth = inject(AuthService);
 
-  readonly today = this.todayAsDateString();
-  private readonly expenseCategories = [
-    'Rent',
-    'Electricity',
-    'Groceries',
-    'Water',
-    'Other'
-  ];
-
-  roommates: Roommate[] = [
-    {
-      id: 1,
-      name: 'Narayan',
-      email: 'narayan@example.com',
-      status: 'Active',
-      balance: 1200,
-      departureDate: '',
-      returnDate: '',
-      sharedCategories: [...this.expenseCategories],
-      absenceSharing: this.defaultAbsenceSharing()
-    },
-    {
-      id: 2,
-      name: 'Rahul',
-      email: 'rahul@example.com',
-      status: 'Temporarily Absent',
-      balance: 2300,
-      departureDate: '2026-10-15',
-      returnDate: '',
-      sharedCategories: [...this.expenseCategories],
-      absenceSharing: this.defaultAbsenceSharing()
-    },
-    {
-      id: 3,
-      name: 'Amit',
-      email: 'amit@example.com',
-      status: 'Active',
-      balance: -500,
-      departureDate: '',
-      returnDate: '',
-      sharedCategories: [...this.expenseCategories],
-      absenceSharing: this.defaultAbsenceSharing()
-    },
-    {
-      id: 4,
-      name: 'Priya',
-      email: 'priya@example.com',
-      status: 'Active',
-      balance: 0,
-      departureDate: '',
-      returnDate: '',
-      sharedCategories: [...this.expenseCategories],
-      absenceSharing: this.defaultAbsenceSharing()
-    }
-  ];
-
-  absenceDrafts: Record<number, AbsenceDraft> = {};
-  returnDateDrafts: Record<number, string> = {};
-  absenceFormRoommateId: number | null = null;
-  returnFormRoommateId: number | null = null;
-
-  showForm = false;
-
-  newName = '';
-  newEmail = '';
-
+  room: RoomDetails | null = null;
+  members: RoomMember[] = [];
+  rentCycles: RentCycleSummary[] = [];
+  selectedCycleStart = '';
+  historyLoading = false;
+  historyError = '';
+  memberStatuses: Record<number, RentCycleMemberPaymentStatus> = {};
+  statusLoading = false;
+  statusLoadError = '';
+  statusSaveError = '';
+  statusSavingMemberId: number | null = null;
+  loading = true;
   errorMessage = '';
-  successMessage = '';
 
-  get activeCount(): number {
-    return this.roommates.filter(
-      roommate => roommate.status === 'Active'
-    ).length;
-  }
-
-  addRoommate(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    if (!this.newName.trim() || !this.newEmail.trim()) {
-      this.errorMessage = 'Enter roommate name and email.';
-      return;
-    }
-
-    const roommate: Roommate = {
-      id: Date.now(),
-      name: this.newName.trim(),
-      email: this.newEmail.trim(),
-      status: 'Active',
-      balance: 0,
-      departureDate: '',
-      returnDate: '',
-      sharedCategories: [...this.expenseCategories],
-      absenceSharing: this.defaultAbsenceSharing()
-    };
-
-    this.roommates.push(roommate);
-
-    this.newName = '';
-    this.newEmail = '';
-    this.showForm = false;
-    this.syncRoommateRules();
-
-    this.successMessage = 'Roommate added successfully!';
-  }
-
-  beginAbsence(roommate: Roommate): void {
-    this.errorMessage = '';
-    this.absenceDrafts[roommate.id] = {
-      departureDate: ''
-    };
-    this.absenceFormRoommateId = roommate.id;
-  }
-
-  cancelAbsence(): void {
-    this.absenceFormRoommateId = null;
-  }
-
-  confirmAbsence(roommate: Roommate): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    const draft = this.absenceDrafts[roommate.id];
-    if (!draft || !this.isValidActualDate(draft.departureDate)) {
-      this.errorMessage = 'Enter a valid actual departure date.';
-      return;
-    }
-
-    if (draft.departureDate > this.today) {
-      this.errorMessage = 'Departure date cannot be in the future.';
-      return;
-    }
-
-    roommate.status = 'Temporarily Absent';
-    roommate.departureDate = draft.departureDate;
-    roommate.returnDate = '';
-    this.absenceFormRoommateId = null;
-    this.syncRoommateRules();
-    this.successMessage = `${roommate.name} is marked absent from ${roommate.departureDate}.`;
-  }
-
-  beginReturn(roommate: Roommate): void {
-    this.errorMessage = '';
-    this.returnDateDrafts[roommate.id] = '';
-    this.returnFormRoommateId = roommate.id;
-  }
-
-  cancelReturn(): void {
-    this.returnFormRoommateId = null;
-  }
-
-  confirmReturn(roommate: Roommate): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-    const returnDate = this.returnDateDrafts[roommate.id];
-
-    if (!this.isValidActualDate(returnDate)) {
-      this.errorMessage = 'Enter a valid actual return date.';
-      return;
-    }
-
-    if (returnDate < roommate.departureDate) {
-      this.errorMessage = 'Return date cannot be before the departure date.';
-      return;
-    }
-
-    if (returnDate > this.today) {
-      this.errorMessage = 'Return date cannot be in the future.';
-      return;
-    }
-
-    roommate.status = 'Active';
-    roommate.returnDate = returnDate;
-    this.returnFormRoommateId = null;
-    this.syncRoommateRules();
-    this.successMessage = `${roommate.name} returned on ${roommate.returnDate}.`;
-  }
-
-  syncRoommateRules(): void {
-    this.expenseService.roommateRules = this.roommates.map((roommate) => ({
-      name: roommate.name,
-      status: roommate.status,
-      departureDate: roommate.departureDate,
-      returnDate: roommate.returnDate,
-      sharedCategories: [...roommate.sharedCategories],
-      absenceSharing: { ...roommate.absenceSharing },
-      email: roommate.email
-    }));
-  }
-
-  private loadRoommateRules(): void {
-    const rulesByName = new Map(
-      this.expenseService.roommateRules.map((rule) => [rule.name, rule])
+  get isAdmin(): boolean {
+    const userId = this.auth.currentUser?.userId;
+    return this.members.some(
+      (member) => member.userId === userId && member.role === 'ADMIN'
     );
-    const knownNames = new Set(this.roommates.map((roommate) => roommate.name));
-
-    this.roommates = this.roommates.map((roommate) => {
-      const rule = rulesByName.get(roommate.name);
-      return rule
-        ? {
-            ...roommate,
-            status: rule.status,
-            departureDate: rule.departureDate,
-            returnDate: rule.returnDate,
-            sharedCategories: rule.sharedCategories.filter(
-              category => category !== 'Internet'
-            ),
-            absenceSharing: { ...rule.absenceSharing }
-          }
-        : roommate;
-    });
-
-    let nextId =
-      Math.max(0, ...this.roommates.map((roommate) => roommate.id)) + 1;
-    for (const rule of this.expenseService.roommateRules) {
-      if (!knownNames.has(rule.name)) {
-        this.roommates.push({
-          id: nextId++,
-          name: rule.name,
-          email: rule.email ?? '',
-          status: rule.status,
-          balance: 0,
-          departureDate: rule.departureDate,
-          returnDate: rule.returnDate,
-          sharedCategories: rule.sharedCategories.filter(
-            category => category !== 'Internet'
-          ),
-          absenceSharing: { ...rule.absenceSharing }
-        });
-      }
-    }
   }
 
-  private defaultAbsenceSharing(): AbsenceSharingRules {
-    return {
-      rentContinues: true,
-      electricitySharedDuringAbsence: true
-    };
-  }
-
-  private isValidActualDate(value: string): boolean {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-    if (!match) {
-      return false;
-    }
-
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-    const date = new Date(year, month - 1, day);
+  get selectedCycle(): RentCycleSummary | null {
     return (
-      date.getFullYear() === year &&
-      date.getMonth() === month - 1 &&
-      date.getDate() === day
+      this.rentCycles.find(
+        (cycle) => cycle.startDate === this.selectedCycleStart
+      ) ?? null
     );
   }
 
-  private todayAsDateString(): string {
-    const date = new Date();
-    return [
-      date.getFullYear(),
-      String(date.getMonth() + 1).padStart(2, '0'),
-      String(date.getDate()).padStart(2, '0')
-    ].join('-');
+  ngOnInit(): void {
+    this.loadRoomMembers();
   }
 
+  selectCycle(event: Event): void {
+    this.selectedCycleStart = (event.target as HTMLSelectElement).value;
+    this.loadMemberStatuses();
+  }
+
+  formatCycleLabel(startDate: string): string {
+    const [year, month, day] = startDate.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleString('en-IN', {
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  formatAmount(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount));
+  }
+
+  memberStatus(memberId: number): RentCycleMemberPaymentStatus {
+    return this.memberStatuses[memberId] ?? 'PENDING';
+  }
+
+  saveMemberStatus(memberId: number, event: Event): void {
+    const status = (event.target as HTMLSelectElement)
+      .value as RentCycleMemberPaymentStatus;
+    const cycle = this.selectedCycle;
+    if (
+      (status !== 'CLEAR' && status !== 'PENDING') ||
+      !this.room ||
+      !cycle ||
+      !this.isAdmin ||
+      this.statusLoading ||
+      this.statusSavingMemberId !== null
+    ) {
+      return;
+    }
+
+    const roomId = this.room.roomId;
+    const startDate = cycle.startDate;
+    this.statusSavingMemberId = memberId;
+    this.statusSaveError = '';
+    this.roomsApi
+      .updateRentCycleMemberStatus(roomId, startDate, memberId, status)
+      .subscribe({
+        next: (savedStatus) => {
+          if (this.selectedCycleStart === startDate) {
+            this.memberStatuses = {
+              ...this.memberStatuses,
+              [savedStatus.memberId]: savedStatus.status,
+            };
+          }
+          this.statusSavingMemberId = null;
+          this.changeDetector.markForCheck();
+        },
+        error: (error: unknown) => {
+          this.statusSavingMemberId = null;
+          this.statusSaveError =
+            error instanceof HttpErrorResponse &&
+            typeof error.error?.message === 'string'
+              ? error.error.message
+              : 'The payment status could not be saved. Please try again.';
+          this.changeDetector.markForCheck();
+        },
+      });
+  }
+
+  retryMemberStatuses(): void {
+    this.loadMemberStatuses();
+  }
+
+  loadRoomMembers(): void {
+    this.loading = true;
+    this.errorMessage = '';
+    this.changeDetector.markForCheck();
+
+    defer(() => this.roomsApi.getMyRooms())
+      .pipe(
+        timeout({ first: 15_000 }),
+        switchMap((rooms) => {
+          const currentRoom = rooms[0];
+          if (!currentRoom) {
+            return of({ room: null, members: [] as RoomMember[] });
+          }
+          return this.roomsApi.getMembers(currentRoom.roomId).pipe(
+            timeout({ first: 15_000 }),
+            map((members) => ({ room: currentRoom, members }))
+          );
+        })
+      )
+      .subscribe({
+        next: ({ room, members }) => {
+          this.room = room;
+          this.members = members;
+          this.loading = false;
+          if (room && this.isAdmin) {
+            this.loadRentHistory(room.roomId);
+          }
+          this.changeDetector.markForCheck();
+        },
+        error: (error: unknown) => {
+          this.errorMessage =
+            error instanceof HttpErrorResponse &&
+            typeof error.error?.message === 'string'
+              ? error.error.message
+              : 'Room members could not be loaded. Check your connection and try again.';
+          this.loading = false;
+          this.changeDetector.markForCheck();
+        },
+      });
+  }
+
+  private loadRentHistory(roomId: number): void {
+    this.historyLoading = true;
+    this.historyError = '';
+    this.roomsApi
+      .getRoomRentCycles(roomId)
+      .pipe(timeout({ first: 15_000 }))
+      .subscribe({
+        next: (cycles) => {
+          this.rentCycles = cycles;
+          this.selectedCycleStart =
+            cycles.find((cycle) => cycle.currentCycle)?.startDate ??
+            cycles[0]?.startDate ??
+            '';
+          this.historyLoading = false;
+          this.memberStatuses = {};
+          if (this.selectedCycleStart) {
+            this.loadMemberStatuses();
+          }
+          this.changeDetector.markForCheck();
+        },
+        error: () => {
+          this.historyError =
+            'Monthly member balances could not be loaded. Please retry.';
+          this.historyLoading = false;
+          this.changeDetector.markForCheck();
+        },
+      });
+  }
+
+  private loadMemberStatuses(): void {
+    const roomId = this.room?.roomId;
+    const cycle = this.selectedCycle;
+    if (!roomId || !cycle) {
+      this.memberStatuses = {};
+      return;
+    }
+
+    const startDate = cycle.startDate;
+    this.statusLoading = true;
+    this.statusLoadError = '';
+    this.statusSaveError = '';
+    this.roomsApi
+      .getRentCycleMemberStatuses(roomId, startDate)
+      .pipe(timeout({ first: 15_000 }))
+      .subscribe({
+        next: (statuses) => {
+          if (this.selectedCycleStart === startDate) {
+            this.memberStatuses = Object.fromEntries(
+              statuses.map((status) => [status.memberId, status.status])
+            );
+            this.statusLoading = false;
+            this.changeDetector.markForCheck();
+          }
+        },
+        error: () => {
+          if (this.selectedCycleStart === startDate) {
+            this.statusLoadError =
+              'Payment statuses could not be loaded. Retry before changing a status.';
+            this.statusLoading = false;
+            this.changeDetector.markForCheck();
+          }
+        },
+      });
+  }
 }

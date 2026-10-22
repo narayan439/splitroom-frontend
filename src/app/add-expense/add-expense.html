@@ -1,167 +1,320 @@
-<div class="page">
+<main class="page">
+  <a class="back-link" [routerLink]="roomId ? ['/rooms', roomId] : ['/']">
+    ← {{ room ? 'Back to room' : 'Back to dashboard' }}
+  </a>
 
-  <header class="page-header">
-    <div>
-      <p class="subtitle">ROOM EXPENSES</p>
-      <h1>Add Expense</h1>
-      <p class="help-text">
-        Record a shared expense for your room.
-      </p>
-    </div>
-  </header>
-
-  <main class="expense-card">
-
-    <!-- Expense title -->
-    <div class="form-group">
-      <label for="title">Expense Title</label>
-      <input
-        id="title"
-        type="text"
-        [(ngModel)]="title"
-        placeholder="e.g. Monthly electricity bill"
-      />
-    </div>
-
-    <!-- Category -->
-    <div class="form-group">
-      <label for="category">Category</label>
-
-      <select
-        id="category"
-        [(ngModel)]="category"
-        (ngModelChange)="updateEligibleRoommates()"
-      >
-        <option *ngFor="let item of categories" [value]="item">
-          {{ item }}
-        </option>
-      </select>
-
-      <!-- Custom category input -->
-      <input
-        *ngIf="category === 'Other'"
-        type="text"
-        [(ngModel)]="customCategory"
-        (ngModelChange)="updateEligibleRoommates()"
-        placeholder="Enter your expense category"
-      />
-    </div>
-
-    <!-- Amount -->
-    <div class="form-group">
-      <label for="amount">Total Amount (₹)</label>
-      <input
-        id="amount"
-        type="number"
-        min="1"
-        [(ngModel)]="amount"
-        placeholder="Enter amount"
-      />
-    </div>
-
-    <!-- Paid by -->
-    <div class="form-group">
-      <label for="paidBy">Paid By</label>
-
-      <select
-        id="paidBy"
-        [(ngModel)]="paidBy"
-        (ngModelChange)="updateEligibleRoommates()"
-      >
-        <option
-          *ngFor="let roommate of presentRoommates"
-          [value]="roommate.name"
-        >
-          {{ roommate.name }}
-        </option>
-      </select>
-    </div>
-
-    <!-- Date -->
-    <div class="form-group">
-      <label for="date">Expense Date</label>
-      <input
-        id="date"
-        type="date"
-        [(ngModel)]="expenseDate"
-        (ngModelChange)="updateEligibleRoommates()"
-      />
-    </div>
-
-    <!-- Who shares -->
-    <section class="form-group split-group" aria-labelledby="split-heading">
-      <div class="split-heading">
-        <div class="split-heading__copy">
-          <span class="split-heading__step">SPLIT DETAILS</span>
-          <h2 id="split-heading">Who shares this expense?</h2>
-          <p>Choose how this expense is divided between roommates.</p>
-        </div>
-        <span class="split-count">
-          <span aria-hidden="true" class="split-count__icon">✓</span>
-          {{ selectedRoommates.length }} included
-        </span>
+  @if (loading) {
+    <p class="status-message" role="status">Loading room expense details…</p>
+  } @else if (!roomId) {
+    <header class="page-header">
+      <p class="eyebrow">ROOM EXPENSES</p>
+      <h1>Add an expense</h1>
+    </header>
+    @if (errorMessage) {
+      <p class="notice notice--error" role="alert">{{ errorMessage }}</p>
+    } @else if (rooms.length === 0) {
+      <p class="empty-state">You do not belong to a room yet.</p>
+      <a class="secondary-button" routerLink="/rooms/new">Create a room</a>
+    } @else {
+      <div class="room-choices">
+        @for (item of rooms; track item.roomId) {
+          <a [routerLink]="['/rooms', item.roomId, 'expenses', 'new']">
+            <strong>{{ item.roomName }}</strong>
+            <span>{{ item.memberCount }} members · Room #{{ item.roomId }}</span>
+          </a>
+        }
       </div>
+    }
+  } @else if (errorMessage && !room) {
+    <p class="notice notice--error" role="alert">{{ errorMessage }}</p>
+  } @else if (room) {
+    <header class="page-header">
+      <p class="eyebrow">{{ room.roomName }}</p>
+      <h1>Add an expense</h1>
 
-      <div class="split-selection">
-        <div aria-current="true" class="split-option split-option--selected">
-          <span aria-hidden="true" class="split-option__check">✓</span>
-          <span>
-            <strong>Select roommates</strong>
-            <small>Choose which eligible roommates share this expense</small>
-          </span>
-        </div>
-      </div>
+    </header>
 
-      <!-- Ineligible roommates remain visible so the active rule is clear. -->
-      <div class="roommate-list">
+    @if (errorMessage) {
+      <p class="notice notice--error" role="alert">{{ errorMessage }}</p>
+    }
 
-        <label
-          class="roommate-item"
-          *ngFor="let roommate of roommates"
-        >
-          <input
-            type="checkbox"
-            [(ngModel)]="roommate.selected"
-            [ngModelOptions]="{ standalone: true }"
-            [disabled]="!eligibleRoommates.includes(roommate.name)"
-          />
-
-          <span>
-            {{ roommate.name }}
-            <small *ngIf="!eligibleRoommates.includes(roommate.name)">
-              Not eligible
-            </small>
-          </span>
+    <form class="expense-card" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <label class="form-group" for="categoryId">
+          <span>Category</span>
+          <select id="categoryId" formControlName="categoryId">
+            <option [ngValue]="null" disabled>Select category</option>
+            @for (category of selectableCategories; track category.categoryId) {
+              <option [ngValue]="category.categoryId">{{ category.categoryName }}</option>
+            }
+            <option [ngValue]="'other'">Other</option>
+          </select>
+          @if (categories.length === 0) {
+            <small class="help-text">No expense categories are available for this room.</small>
+          }
+          @if (form.controls.categoryId.touched && form.controls.categoryId.invalid) {
+            <small class="field-error">Choose an expense category.</small>
+          }
         </label>
 
+        @if (isOtherCategorySelected) {
+          <label class="form-group" for="customCategoryName">
+            <span>Custom category name</span>
+            <input
+              id="customCategoryName"
+              type="text"
+              maxlength="100"
+              formControlName="customCategoryName"
+              placeholder="e.g. Household supplies"
+            />
+            @if (
+              form.controls.customCategoryName.touched &&
+              form.controls.customCategoryName.invalid
+            ) {
+              <small class="field-error">Enter a custom category name.</small>
+            }
+            @if (customCategoryNameAlreadyExists) {
+              <small class="field-error">
+                This name matches an existing room category.
+              </small>
+            }
+          </label>
+          @if (!customCategorySupported) {
+            <p class="category-limitation" role="note">
+              The current API cannot create custom categories. If this room has
+              an existing “Other” category, you can save under that category
+              with this name in the required expense title. Otherwise this
+              entry cannot be saved.
+            </p>
+          }
+        }
+
+        <label class="form-group" for="amount">
+          <span>Amount (₹)</span>
+          <input
+            id="amount"
+            type="number"
+            inputmode="decimal"
+            min="0.01"
+            max="9999999999.99"
+            step="0.01"
+            formControlName="amount"
+            placeholder="0.00"
+          />
+          @if (form.controls.amount.touched && form.controls.amount.invalid) {
+            <small class="field-error">Enter an amount above ₹0 with up to 2 decimal places.</small>
+          }
+        </label>
+
+        <div class="form-group">
+          <span>Paid by</span>
+          @if (membersLoading) {
+            <p class="field-loading" role="status">Loading room members…</p>
+          } @else if (membersError) {
+            <p class="field-error" role="alert">{{ membersError }}</p>
+            <button
+              type="button"
+              class="retry-button"
+              (click)="retryMembers()"
+            >Retry members</button>
+          } @else {
+            <select
+              id="paidByMemberId"
+              formControlName="paidByMemberId"
+              (change)="onPayerSelectionChanged()"
+              required
+            >
+            <option [ngValue]="null" disabled>Select payer</option>
+            <option [ngValue]="'none'">No one (shared expense)</option>
+            @for (member of payerOptions; track member.roomMemberId) {
+              <option [ngValue]="member.roomMemberId">
+                {{ member.name }}{{ member.userId === currentUserId ? ' (you)' : '' }}
+              </option>
+            }
+            </select>
+            @if (form.controls.paidByMemberId.touched && form.controls.paidByMemberId.invalid) {
+              <small class="field-error">Choose a payer from this room.</small>
+            }
+            <small class="help-text">
+              @if (isNoPayerSelected) {
+                No individual paid this expense. Choose which room members
+                should share the amount; you can select or deselect anyone below.
+              } @else if (currentRole === 'ADMIN') {
+                Room admins may select any room member.
+              } @else {
+                You can select only your own room membership.
+              }
+            </small>
+          }
+        </div>
+
+        <label class="form-group" for="expenseDate">
+          <span>Expense date</span>
+          <input id="expenseDate" type="date" formControlName="expenseDate" />
+          @if (form.controls.expenseDate.touched && form.controls.expenseDate.invalid) {
+            <small class="field-error">Choose the expense date.</small>
+          }
+        </label>
       </div>
-    </section>
 
-    <!-- Split summary -->
-    <div class="share-summary">
-      <span>
-        {{ selectedRoommates.length }} roommates sharing
-      </span>
+      <fieldset class="participant-section">
+        <legend>Who shares this expense?</legend>
 
-      <strong>
-        {{ sharePerPerson | currency:'INR':'symbol':'1.2-2' }}
-        per person
-      </strong>
-    </div>
+        @if (membersLoading) {
+          <p class="empty-state" role="status">Loading room members…</p>
+        } @else if (membersError) {
+          <p class="field-error" role="alert">{{ membersError }}</p>
+          <button type="button" class="retry-button" (click)="retryMembers()">
+            Retry members
+          </button>
+        } @else if (members.length === 0) {
+          <p class="empty-state">No room members are available.</p>
+        } @else {
+          <label class="member-option member-option--select-all">
+            <input
+              type="checkbox"
+              aria-label="Select all room members"
+              [checked]="allParticipantsSelected"
+              (change)="toggleAllParticipants($event)"
+            />
+            <span><strong>Select all</strong></span>
+          </label>
+          <div class="member-list">
+            @for (member of members; track member.roomMemberId) {
+              <label class="member-option">
+                <input
+                  type="checkbox"
+                  [checked]="isParticipantSelected(member.roomMemberId)"
+                  (change)="toggleParticipant(member.roomMemberId, $event)"
+                />
+                <span>
+                  <strong>{{ member.name }}</strong>
+                  <small>{{ member.email }}</small>
+                </span>
+              </label>
+            }
+          </div>
+        }
+        @if (
+          form.controls.splitBetweenMemberIds.touched &&
+          form.controls.splitBetweenMemberIds.invalid
+        ) {
+          <small class="field-error">Select at least one member to share this expense.</small>
+        }
+      </fieldset>
 
-    <!-- Messages -->
-    <div class="error-message" *ngIf="errorMessage">
-      {{ errorMessage }}
-    </div>
+      @if (savedExpense) {
+        <section class="split-preview saved-split" aria-live="polite" aria-labelledby="saved-split-title">
+          <div class="split-preview__heading">
+            <div>
+              <h2 id="saved-split-title">Saved expense split</h2>
+              <p>
+                @if (savedExpense.paidBy) {
+                  These are the final shares returned by SplitRoom for the saved
+                  expense, including applicable room rules.
+                } @else {
+                  No one paid this expense. The full amount was split equally
+                  among the room members.
+                }
+              </p>
+            </div>
+            <strong>
+              Total {{ savedExpense.amount | currency:'INR':'symbol':'1.2-2' }}
+            </strong>
+          </div>
+          <ul class="share-preview-list">
+            @for (contribution of savedContributionPreview; track contribution.memberId) {
+              <li>
+                <span>
+                  <strong>{{ contribution.memberName }}</strong>
+                  <small>
+                    Share {{ contribution.shareAmount | currency:'INR':'symbol':'1.2-2' }}
+                    · Paid {{ contribution.paidAmount | currency:'INR':'symbol':'1.2-2' }}
+                  </small>
+                </span>
+                <strong
+                  [class.balance-positive]="contribution.netImpact > 0"
+                  [class.balance-negative]="contribution.netImpact < 0"
+                >{{ formatExpenseNetImpact(contribution.netImpact) }}</strong>
+              </li>
+            }
+          </ul>
+          <div class="form-actions">
+            <a class="secondary-button" [routerLink]="['/rooms', room.roomId]">
+              View room
+            </a>
+            <button type="button" class="save-button" (click)="addAnotherExpense()">
+              Add another expense
+            </button>
+          </div>
+        </section>
+      } @else {
+      <section class="split-preview" aria-live="polite" aria-labelledby="split-preview-title">
+        <div class="split-preview__heading">
+          <div>
+            <h2 id="split-preview-title">Estimated split</h2>
+            @if (selectedCategoryName) {
+              <p class="split-preview__category">{{ selectedCategoryName }}</p>
+            }
+            <p>
+              Share is the amount stored for each member. The green or red net
+              impact is calculated from paid minus share; it is not stored as a
+              share. The saved split comes from the backend and may differ due
+              to rounding or room rules.
+            </p>
+          </div>
+          @if (previewAmount !== null) {
+            <strong>
+              Total {{ previewAmount | currency:'INR':'symbol':'1.2-2' }}
+            </strong>
+          }
+        </div>
+        @if (previewAmount === null) {
+          <p class="empty-state">Enter a valid amount to preview shares.</p>
+        } @else if (sharePreview.length === 0) {
+          <p class="empty-state">Select one or more members to preview the split.</p>
+        } @else {
+          <ul class="share-preview-list">
+            @for (contribution of contributionPreview; track contribution.memberId) {
+              <li>
+                <span>
+                  <strong>{{ contribution.memberName }}</strong>
+                  <small>
+                    Share {{ contribution.shareAmount | currency:'INR':'symbol':'1.2-2' }}
+                    ·
+                    Paid {{ contribution.paidAmount | currency:'INR':'symbol':'1.2-2' }}
+                  </small>
+                </span>
+                <strong
+                  [class.balance-positive]="contribution.netImpact > 0"
+                  [class.balance-negative]="contribution.netImpact < 0"
+                >{{ formatExpenseNetImpact(contribution.netImpact) }}</strong>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+      }
 
-    <div class="success-message" *ngIf="successMessage">
-      {{ successMessage }}
-    </div>
-
-    <!-- Save -->
-    <button class="save-button" (click)="saveExpense()">
-      Save Expense
-    </button>
-
-  </main>
-</div>
+      @if (!savedExpense) {
+        <div class="form-actions">
+          <a class="secondary-button" [routerLink]="['/rooms', room.roomId]">Cancel</a>
+          <button
+            class="save-button"
+            type="submit"
+            [disabled]="
+              submitting ||
+              categories.length === 0 ||
+              membersLoading ||
+              !!membersError ||
+              payerOptions.length === 0 ||
+              (isOtherCategorySelected && !customCategorySupported)
+            "
+          >
+            {{ submitting ? 'Saving…' : 'Save expense' }}
+          </button>
+        </div>
+      }
+    </form>
+  }
+</main>

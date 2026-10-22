@@ -15,26 +15,7 @@ export interface Expense {
 })
 export class ExpenseService {
 
-  expenses: Expense[] = [
-    {
-      id: 1,
-      title: 'Monthly Rent',
-      category: 'Rent',
-      amount: 12000,
-      paidBy: 'Narayan',
-      date: '2026-10-01',
-      roommates: ['Narayan', 'Rahul', 'Amit', 'Priya']
-    },
-    {
-      id: 2,
-      title: 'Electricity Bill',
-      category: 'Electricity',
-      amount: 2400,
-      paidBy: 'Rahul',
-      date: '2026-10-05',
-      roommates: ['Narayan', 'Rahul', 'Amit']
-    }
-  ];
+  expenses: Expense[] = [];
 
   addExpense(expense: Omit<Expense, 'id'>): void {
     const newExpense: Expense = {

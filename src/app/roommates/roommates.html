@@ -1,188 +1,172 @@
-<div class="page">
-
+<main class="page">
   <header class="page-header">
     <div>
       <p class="subtitle">ROOM MANAGEMENT</p>
       <h1>Roommates</h1>
-      <p class="help-text">
-        Manage your room members and their status.
-      </p>
+      @if (room) {
+        <p class="help-text">{{ room.roomName }} · Room #{{ room.roomId }}</p>
+      } @else {
+        <p class="help-text">Your shared room members.</p>
+      }
     </div>
-
-    <button class="add-button" (click)="showForm = !showForm">
-      + Add Roommate
-    </button>
+    @if (!loading && !errorMessage && !room) {
+      <a class="add-button" routerLink="/rooms/new">Create room</a>
+    }
   </header>
 
-  <!-- Add roommate form -->
-  <section class="form-card" *ngIf="showForm">
-
-    <h2>Add New Roommate</h2>
-
-    <div class="form-group">
-      <label for="name">Full Name</label>
-      <input
-        id="name"
-        type="text"
-        [(ngModel)]="newName"
-        placeholder="Enter roommate name"
-      />
+  <section class="room-invitations" aria-labelledby="members-heading">
+    <div class="section-heading">
+      <h2 id="members-heading">Room members</h2>
+      @if (room && !loading && !errorMessage) {
+        <a class="manage-link" [routerLink]="['/rooms', room.roomId]">
+          Room details
+        </a>
+      }
     </div>
 
-    <div class="form-group">
-      <label for="email">Email</label>
-      <input
-        id="email"
-        type="email"
-        [(ngModel)]="newEmail"
-        placeholder="Enter roommate email"
-      />
-    </div>
-
-    <button class="save-button" (click)="addRoommate()">
-      Save Roommate
-    </button>
-
-  </section>
-
-  <!-- Messages -->
-  <div class="error-message" *ngIf="errorMessage">
-    {{ errorMessage }}
-  </div>
-
-  <div class="success-message" *ngIf="successMessage">
-    {{ successMessage }}
-  </div>
-
-  <!-- Room summary -->
-  <section class="summary-card">
-    <div>
-      <p>Total Roommates</p>
-      <h2>{{ roommates.length }}</h2>
-    </div>
-
-    <div>
-      <p>Currently Active</p>
-      <h2>{{ activeCount }}</h2>
-    </div>
-  </section>
-
-  <!-- Roommate list -->
-  <section class="roommate-section">
-
-    <h2>All Roommates</h2>
-
-    <div class="roommate-card" *ngFor="let roommate of roommates">
-
-      <div class="avatar">
-        {{ roommate.name.charAt(0) }}
+    @if (loading) {
+      <p class="empty-state" role="status">Loading room members…</p>
+    } @else if (errorMessage) {
+      <p class="error-message" role="alert">{{ errorMessage }}</p>
+      <button type="button" class="status-button" (click)="loadRoomMembers()">
+        Try again
+      </button>
+    } @else if (!room) {
+      <p class="empty-state">
+        You do not belong to a room yet. Create or join a room to see its members.
+      </p>
+    } @else if (members.length === 0) {
+      <p class="empty-state">There are no members listed for this room.</p>
+    } @else {
+      <div class="members-list">
+        @for (member of members; track member.roomMemberId) {
+          <article class="member-card">
+            <span class="avatar" aria-hidden="true">
+              {{ member.name.charAt(0).toUpperCase() }}
+            </span>
+            <span class="member-info">
+              <strong>{{ member.name }}</strong>
+              <small>{{ member.email }}</small>
+            </span>
+            <span
+              class="role-badge"
+              [class.role-badge--admin]="member.role === 'ADMIN'"
+            >
+              {{ member.role }}
+            </span>
+          </article>
+        }
       </div>
+    }
+  </section>
 
-      <div class="roommate-info">
-        <h3>{{ roommate.name }}</h3>
-        <p>{{ roommate.email }}</p>
-
-        <span
-          class="status"
-          [class.active]="roommate.status === 'Active'"
-          [class.away]="roommate.status === 'Temporarily Absent'"
-        >
-          {{ roommate.status }}
-        </span>
-        <div class="absence-dates" *ngIf="roommate.departureDate">
-          <span>
-            Departure date:
-            <strong>{{ roommate.departureDate | date:'d MMMM yyyy' }}</strong>
-          </span>
-          <span>
-            Return date:
-            @if (roommate.returnDate) {
-              <strong>{{ roommate.returnDate | date:'d MMMM yyyy' }}</strong>
-            } @else {
-              <strong>Not recorded</strong>
-            }
-          </span>
+  @if (room && isAdmin && !loading && !errorMessage) {
+    <section class="room-invitations monthly-balances" aria-labelledby="monthly-balances-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="monthly-balances-heading">Monthly member balances</h2>
+          <p>Review each member’s share, payments, and amount owed for a rent cycle.</p>
         </div>
+        @if (rentCycles.length > 0) {
+          <label class="cycle-select">
+            <span>Rent cycle</span>
+            <select
+              [value]="selectedCycleStart"
+              (change)="selectCycle($event)"
+              aria-label="Choose rent cycle for member balances"
+            >
+              @for (cycle of rentCycles; track cycle.startDate) {
+                <option [value]="cycle.startDate">
+                  {{ formatCycleLabel(cycle.startDate) }}
+                  @if (cycle.currentCycle) { (Current) }
+                </option>
+              }
+            </select>
+          </label>
+        }
       </div>
 
-      <div class="balance">
-        <p>Balance</p>
-
-        <strong [class.positive]="roommate.balance < 0">
-          {{ roommate.balance | currency:'INR':'symbol':'1.0-0' }}
-        </strong>
-      </div>
-
-      <div class="away-controls">
-        <button
-          *ngIf="roommate.status === 'Active'"
-          class="status-button"
-          type="button"
-          (click)="beginAbsence(roommate)"
-        >
-          Mark Absent
+      @if (historyLoading) {
+        <p class="empty-state" role="status">Loading monthly member balances…</p>
+      } @else if (historyError) {
+        <p class="error-message" role="alert">{{ historyError }}</p>
+        <button type="button" class="status-button" (click)="loadRoomMembers()">
+          Refresh
         </button>
-
-        @if (absenceFormRoommateId === roommate.id) {
-          <div class="absence-form">
-            <h4>Mark {{ roommate.name }} absent</h4>
-            <label [for]="'departure-date-' + roommate.id">Actual departure date</label>
-            <input
-              [id]="'departure-date-' + roommate.id"
-              type="date"
-              [max]="today"
-              [(ngModel)]="absenceDrafts[roommate.id].departureDate"
-            />
-
-            <div class="return-date-actions">
-              <button
-                class="status-button status-button--returned"
-                type="button"
-                (click)="confirmAbsence(roommate)"
-              >
-                Confirm Absence
-              </button>
-              <button class="status-button" type="button" (click)="cancelAbsence()">Cancel</button>
+      } @else if (selectedCycle; as cycle) {
+        <p class="cycle-range">
+          {{ cycle.startDate | date:'dd MMM yyyy' }} – {{ cycle.endDate | date:'dd MMM yyyy' }}
+        </p>
+        @if (cycle.members.length === 0) {
+          <p class="empty-state">There are no member balances in this cycle.</p>
+        } @else {
+          <div class="balance-table" role="table" aria-label="Member cycle balances and payment status">
+            <div class="balance-table__header" role="row">
+              <span role="columnheader">Member</span>
+              <span role="columnheader">Share</span>
+              <span role="columnheader">Paid</span>
+              <span role="columnheader">Cycle balance</span>
+              <span role="columnheader">Payment status</span>
             </div>
+            @for (member of cycle.members; track member.memberId) {
+              <article class="balance-table__row" role="row">
+                <strong role="cell" data-label="Member">{{ member.memberName }}</strong>
+                <span role="cell" data-label="Share">{{ member.shareAmount | currency:'INR':'symbol':'1.2-2' }}</span>
+                <span role="cell" data-label="Paid">{{ member.paidAmount | currency:'INR':'symbol':'1.2-2' }}</span>
+                <span
+                  role="cell"
+                  data-label="Cycle balance"
+                  class="member-balance"
+                  [class.balance-owes]="member.netBalance < 0"
+                  [class.balance-credit]="member.netBalance > 0"
+                >
+                  @if (member.netBalance < 0) {
+                    Owes {{ formatAmount(member.netBalance) }}
+                  } @else if (member.netBalance > 0) {
+                    To receive {{ formatAmount(member.netBalance) }}
+                  } @else {
+                    Settled · ₹0.00
+                  }
+                </span>
+                <label
+                  role="cell"
+                  class="payment-status-cell"
+                  data-label="Payment status"
+                >
+                  <select
+                    class="payment-status-select"
+                    [value]="memberStatus(member.memberId)"
+                    [disabled]="statusLoading || statusLoadError || statusSavingMemberId !== null || memberStatus(member.memberId) === 'CLEAR'"
+                    [attr.aria-label]="'Payment status for ' + member.memberName"
+                    (change)="saveMemberStatus(member.memberId, $event)"
+                  >
+                    <option value="PENDING">Pending</option>
+                    <option value="CLEAR">Clear</option>
+                  </select>
+                </label>
+              </article>
+            }
           </div>
         }
 
-        @if (roommate.status === 'Temporarily Absent') {
-          @if (returnFormRoommateId === roommate.id) {
-            <div class="return-date-controls">
-              <label [for]="'return-date-' + roommate.id">Actual return date</label>
-              <input
-                [id]="'return-date-' + roommate.id"
-                type="date"
-                [min]="roommate.departureDate"
-                [max]="today"
-                [(ngModel)]="returnDateDrafts[roommate.id]"
-              />
-              <div class="return-date-actions">
-                <button
-                  class="status-button status-button--returned"
-                  type="button"
-                  (click)="confirmReturn(roommate)"
-                >
-                  Save Return Date
-                </button>
-                <button class="status-button" type="button" (click)="cancelReturn()">Cancel</button>
-              </div>
-            </div>
-          } @else {
-            <button
-              class="status-button"
-              type="button"
-              (click)="beginReturn(roommate)"
-            >
-              Mark Returned
-            </button>
-          }
+        <p class="history-note">
+          Clear/Pending is a separate admin status for this cycle. It does not create a settlement or change expenses, shares, or balances.
+        </p>
+        @if (statusLoading) {
+          <p class="empty-state" role="status">Loading payment statuses…</p>
         }
-      </div>
-
-    </div>
-
-  </section>
-
-</div>
+        @if (statusLoadError) {
+          <p class="settlement-error" role="alert">{{ statusLoadError }}</p>
+          <button type="button" class="status-button" (click)="retryMemberStatuses()">
+            Retry statuses
+          </button>
+        }
+        @if (statusSaveError) {
+          <p class="settlement-error" role="alert">{{ statusSaveError }}</p>
+        }
+      } @else {
+        <p class="empty-state">No monthly rent-cycle history is available.</p>
+      }
+    </section>
+  }
+</main>

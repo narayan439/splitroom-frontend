@@ -1,0 +1,102 @@
+{
+  "planHash": "d3f5d27e7957d67f3f43328b98375b2af6fe2444ac6b4259acdd53963d8d44ad",
+  "phase": "standalone",
+  "recordedAtUtc": "2026-10-22T07:04:50.6727276Z",
+  "retryCount": 0,
+  "resetBaseline": false,
+  "complete": true,
+  "result": {
+    "setupSucceeded": true,
+    "setupDurationMs": 0,
+    "setupFailureOutput": null,
+    "assertions": [
+      {
+        "name": "angular-build",
+        "kind": "process",
+        "verificationMethod": "exit-code",
+        "passed": true,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": 0,
+        "outputSample": "\r\n\u003E splitroom-frontend@0.0.0 build\r\n\u003E ng build\r\n\r\n\u003E Building...\r\n\u221A Building...\r\nInitial chunk files | Names           |  Raw size | Estimated transfer size\r\nchunk-DKVfB9DF.js   | -               | 282.11 kB |                77.82 kB\r\nstyles-MZ4ZPGTU.css | styles          |  18.88 kB |                 2.20 kB\r\nmain-JENN6C5Y.js    | main            |  18.36 kB |                 4.88 kB\r\n\r\n                    | Initial total   | 319.35 kB |                84.91 kB\r\n\r\nLazy chunk files    | Names           |  Raw size | Estimated transfer size\r\nchunk-Cxa3Y67q.js   | room-details    |  50.98 kB |                10.00 kB\r\nchunk-Cau9KpJ6.js   | -               |  48.85 kB |                10.11 kB\r\nchunk-CzJdwQyn.js   | add-expense     |  28.27 kB |                 7.18 kB\r\nchunk-Cxs0N9I3.js   | profile         |  23.29 kB |                 5.37 kB\r\nchunk-l4Obr3BH.js   | expense-history |  22.20 kB |                 5.85 kB\r\nchunk-DBO88dr8.js   | roommates       |  19.73 kB |                 4.95 kB\r\nchunk-BpdGirkL.js   | room-dashboard  |  14.25 kB |                 3.91 kB\r\nchunk-BQHT6f1r.js   | register        |  12.50 kB |                 3.44 kB\r\nchunk-BuEjgv45.js   | my-expenses     |  11.72 kB |                 3.35 kB\r\nchunk-jKyqGIX7.js   | login           |   8.02 kB |                 2.54 kB\r\nchunk-CmS0KKrU.js   | create-room     |   6.82 kB |                 2.36 kB\r\n\r\nApplication bundle generation complete. [6.043 seconds] - 2026-10-22T07:04:23.869Z\r\n\r\n\u001B[33m\u25B2 \u001B[43;33m[\u001B[43;30mWARNING\u001B[43;33m]\u001B[0m \u001B[1msrc/app/roommates/roommates.scss exceeded maximum budget. Budget 4.00 kB was not met by 1.86 kB with a total of 5.86 kB.\u001B[0m\r\n\r\n\r\n\u001B[33m\u25B2 \u001B[43;33m[\u001B[43;30mWARNING\u001B[43;33m]\u001B[0m \u001B[1msrc/app/profile/profile.scss exceeded maximum budget. Budget 4.00 kB was not met by 175 bytes with a total of 4.17 kB.\u001B[0m\r\n\r\n\r\n\u001B[33m\u25B2 \u001B[43;33m[\u001B[43;30mWARNING\u001B[43;33m]\u001B[0m \u001B[1msrc/app/rooms/room-details.scss exceeded maximum budget. Budget 4.00 kB was not met by 3.98 kB with a total of 7.98 kB.\u001B[0m\r\n\r\n\r\nOutput location: C:\\Users\\naray_svbdnrk\\Documents\\GitHub\\splitroom-frontend\\dist\\splitroom-frontend\r\n\r\n",
+        "durationMs": 8672
+      },
+      {
+        "name": "tests-pass",
+        "kind": "process",
+        "verificationMethod": "test-results",
+        "passed": true,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": 0,
+        "outputSample": "\r\n\u003E splitroom-frontend@0.0.0 test\r\n\u003E ng test --watch=false\r\n\r\n\u003E Building...\r\n\u221A Building...\r\nApplication bundle generation complete. [5.469 seconds] - 2026-10-22T07:04:31.671Z\r\n\r\n\r\n\u001B[1m\u001B[30m\u001B[46m RUN \u001B[49m\u001B[39m\u001B[22m \u001B[36mv5.0.5 \u001B[39m\u001B[90mC:/Users/naray_svbdnrk/Documents/GitHub/splitroom-frontend\u001B[39m\r\n\r\n\r\n\u001B[2m Test Files \u001B[22m \u001B[1m\u001B[32m16 passed\u001B[39m\u001B[22m\u001B[90m (16)\u001B[39m\r\n\u001B[2m      Tests \u001B[22m \u001B[1m\u001B[32m61 passed\u001B[39m\u001B[22m\u001B[90m (61)\u001B[39m\r\n\u001B[2m   Start at \u001B[22m 12:34:32\r\n\u001B[2m   Duration \u001B[22m 9.22s\u001B[2m (environment 75%, setup 10%, tests 8%, transform 4%, import 3%)\u001B[22m\r\n\r\n",
+        "durationMs": 17668,
+        "testResults": {
+          "testFramework": "vitest",
+          "runnerDetectedFrom": "package_json",
+          "testsTotal": 61,
+          "testsPassed": 61,
+          "testsFailed": 0,
+          "testsSkipped": 0,
+          "parseFailed": false
+        }
+      },
+      {
+        "name": "login-route-serves",
+        "kind": "http-probe",
+        "verificationMethod": "http-status",
+        "passed": true,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": null,
+        "outputSample": "HTTP 200\n\u003C!doctype html\u003E\n\u003Chtml lang=\u0022en\u0022\u003E\n  \u003Chead\u003E\n    \u003Cscript type=\u0022module\u0022 src=\u0022/@vite/client\u0022\u003E\u003C/script\u003E\n\n    \u003Cmeta charset=\u0022utf-8\u0022/\u003E\n    \u003Ctitle\u003ESplitroomFrontend\u003C/title\u003E\n    \u003Cbase href=\u0022/\u0022/\u003E\n    \u003Cmeta name=\u0022viewport\u0022 content=\u0022width=device-width, initial-scale=1\u0022/\u003E\n    \u003Clink rel=\u0022icon\u0022 type=\u0022image/x-icon\u0022 href=\u0022favicon.ico\u0022/\u003E\n    \u003Cscript src=\u0022runtime-config.js\u0022\u003E\u003C/script\u003E\n  \u003Clink rel=\u0022stylesheet\u0022 href=\u0022styles.css\u0022\u003E\u003C/head\u003E\n  \u003Cbody\u003E\n    \u003Capp-root\u003E\u003C/app-root\u003E\n  \u003Cscript src=\u0022main.js\u0022 type=\u0022module\u0022\u003E\u003C/script\u003E\u003C/body\u003E\n\u003C/html\u003E\n\n--- server output ---\n\r\n\u003E splitroom-frontend@0.0.0 start\r\n\u003E ng serve --port 4300\r\n\r\n\u003E Building...\r\n\u221A Building...\r\nInitial chunk files | Names           |  Raw size\r\nmain.js             | main            |  32.64 kB | \r\nstyles.css          | styles          |   8.77 kB | \r\nchunk-PTVZDSLX.js   | -               |   5.47 kB | \r\nchunk-SEL2EFXB.js   | -               |   5.03 kB | \r\nchunk-NSP7XLVS.js   | -               |   1.26 kB | \r\nchunk-TE47FRWC.js   | -               | 994 bytes | \r\n\r\n                    | Initial total   |  54.17 kB\r\n\r\nLazy chunk files    | Names           |  Raw size\r\nchunk-7Z2R3DVD.js   | room-details    | 132.84 kB | \r\nchunk-QVPNOR4U.js   | add-expense     |  78.70 kB | \r\nchunk-LICJB555.js   | expense-history |  63.09 kB | \r\nchunk-3XVS4VUF.js   | profile         |  62.51 kB | \r\nchunk-T7WWKJ3G.js   | roommates       |  54.65 kB | \r\nchunk-4NJGDTXQ.js   | room-dashboard  |  37.21 kB | \r\nchunk-VMH6NZRG.js   | register        |  33.71 kB | \r\nchunk-ENKC7S2P.js   | my-expenses     |  31.58 kB | \r\nchunk-WSO4WMYH.js   | login           |  21.10 kB | \r\nchunk-Z4E5SX27.js   | create-room     |  18.02 kB | \r\n\r\nApplication bundle generation complete. [4.887 seconds] - 2026-10-22T07:04:49.513Z\r\n\r\nWatch mode enabled. Watching for file changes...\r\nNOTE: Raw file sizes do not reflect development server per-request transformations.\r\n  \u001B[32m\u279C\u001B[39m  \u001B[1mLocal\u001B[22m:   \u001B[36mhttp://localhost:\u001B[1m4300\u001B[22m/\u001B[39m\r\n",
+        "durationMs": 8695
+      }
+    ],
+    "executions": [
+      {
+        "source": "angular-build",
+        "resolvedExecutable": "C:\\Program Files\\nodejs\\npm.CMD",
+        "args": [
+          "run",
+          "build"
+        ],
+        "cwd": "C:\\Users\\naray_svbdnrk\\Documents\\GitHub\\splitroom-frontend",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      },
+      {
+        "source": "tests-pass",
+        "resolvedExecutable": "C:\\Program Files\\nodejs\\npm.CMD",
+        "args": [
+          "test",
+          "--",
+          "--watch=false"
+        ],
+        "cwd": "C:\\Users\\naray_svbdnrk\\Documents\\GitHub\\splitroom-frontend",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      },
+      {
+        "source": "login-route-serves",
+        "resolvedExecutable": "C:\\Program Files\\nodejs\\npm.CMD",
+        "args": [
+          "run",
+          "start",
+          "--",
+          "--port",
+          "4300"
+        ],
+        "cwd": "C:\\Users\\naray_svbdnrk\\Documents\\GitHub\\splitroom-frontend",
+        "env": {},
+        "prependPath": [],
+        "platform": "win32"
+      }
+    ]
+  }
+}

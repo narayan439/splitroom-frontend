@@ -23,6 +23,117 @@ header {
   border: 1px solid #e5e7eb;
 }
 
+.settings-heading {
+  margin-bottom: 18px;
+
+  h2 {
+    margin: 0 0 6px;
+  }
+
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+  }
+}
+
+.settings-action,
+.primary-action {
+  min-height: 42px;
+  padding: 0 15px;
+  margin: 0 8px 8px 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  color: #334155;
+  background: #fff;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+
+  &:hover {
+    border-color: #a5b4fc;
+    background: #f8faff;
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
+}
+
+.primary-action {
+  margin-top: 8px;
+  border-color: #4f46e5;
+  color: #fff;
+  background: #4f46e5;
+
+  &:hover {
+    border-color: #4338ca;
+    color: #fff;
+    background: #4338ca;
+  }
+}
+
+.settings-form {
+  display: grid;
+  max-width: 480px;
+  gap: 8px;
+  margin: 10px 0 24px;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+
+  label {
+    margin-top: 5px;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  input {
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 0 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #1e293b;
+    font: inherit;
+
+    &:focus {
+      outline: 3px solid #c7d2fe;
+      border-color: #6366f1;
+    }
+  }
+}
+
+.field-error,
+.form-notice {
+  font-size: 13px;
+}
+
+.field-error,
+.form-notice--error {
+  color: #b91c1c;
+}
+
+.form-notice {
+  padding: 11px 13px;
+  border-radius: 8px;
+}
+
+.form-notice--error {
+  background: #fef2f2;
+}
+
+.form-notice--success {
+  color: #166534;
+  background: #f0fdf4;
+}
+
 .profile-card {
   text-align: center;
 }
@@ -61,6 +172,142 @@ header {
   }
 }
 
+.rooms-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  h2,
+  p {
+    margin-top: 0;
+  }
+
+  p {
+    color: #6b7280;
+  }
+
+  a {
+    color: #4338ca;
+    font-weight: 650;
+    text-decoration: none;
+  }
+}
+
+.rooms-state {
+  padding: 16px 0;
+  color: #64748b;
+
+  a,
+  button {
+    color: #4338ca;
+  }
+}
+
+.rooms-state--error {
+  color: #b91c1c;
+}
+
+.room-list {
+  display: grid;
+  gap: 10px;
+}
+
+.room-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 1.3fr) minmax(70px, 0.5fr) minmax(80px, 0.7fr) minmax(130px, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  color: #64748b;
+  font-size: 13px;
+  text-decoration: none;
+
+  &:hover {
+    border-color: #a5b4fc;
+    background: #f8faff;
+  }
+}
+
+.room-row__name {
+  color: #1f2937;
+  font-weight: 650;
+}
+
+.room-row__link {
+  color: #4338ca;
+  font-weight: 650;
+}
+
+.invitation-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.invitation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  h3 {
+    margin: 0 0 6px;
+    font-size: 15px;
+  }
+
+  p,
+  small {
+    color: #64748b;
+    font-size: 13px;
+  }
+
+  p {
+    margin: 0 0 5px;
+  }
+}
+
+.invitation-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.accept,
+.decline {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+.accept {
+  border-color: #4f46e5;
+  color: white;
+  background: #4f46e5;
+}
+
+.invitation-success {
+  padding: 12px;
+  border-radius: 8px;
+  color: #166534;
+  background: #f0fdf4;
+}
+
 button {
   padding: 12px 18px;
   margin: 5px;
@@ -82,5 +329,34 @@ button {
   .detail {
     flex-direction: column;
     gap: 5px;
+  }
+
+  .rooms-heading {
+    flex-direction: column;
+  }
+
+  .room-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .invitation-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-card,
+  .details-card,
+  .settings-card {
+    padding: 18px;
+  }
+
+  .settings-form {
+    padding: 14px;
+  }
+
+  .settings-action,
+  .primary-action {
+    width: 100%;
+    margin-right: 0;
   }
 }

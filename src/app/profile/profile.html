@@ -6,39 +6,219 @@
   </header>
 
   <section class="profile-card">
-    <div class="avatar">N</div>
+    <div class="avatar">{{ name.charAt(0).toUpperCase() }}</div>
 
-    <h2>Narayan Sahu</h2>
-    <p>narayan@example.com</p>
+    <h2>{{ name }}</h2>
+    <p>{{ email }}</p>
 
-    <span class="status">Room Member</span>
+    <span class="status">SplitRoom account</span>
   </section>
 
   <section class="details-card">
-    <h2>Room Details</h2>
-
-    <div class="detail">
-      <span>Room Name</span>
-      <strong>Room 204</strong>
+    <div class="rooms-heading">
+      <div>
+        <h2>My room</h2>
+        <p>Your current room and room-specific membership.</p>
+      </div>
+      <a routerLink="/dashboard">Room dashboard</a>
     </div>
 
-    <div class="detail">
-      <span>Roommates</span>
-      <strong>4 Members</strong>
+    @if (roomsLoading) {
+      <p class="rooms-state" role="status">Loading your rooms…</p>
+    } @else if (roomsError) {
+      <p class="rooms-state rooms-state--error" role="alert">
+        {{ roomsError }}
+        <button type="button" (click)="loadRooms()">Try again</button>
+      </p>
+    } @else if (rooms.length === 0) {
+      <div class="rooms-state">
+        <p>You have not joined a room yet.</p>
+        <a routerLink="/rooms/new">Create a room</a>
+      </div>
+    } @else {
+      <div class="room-list">
+        @for (room of rooms; track room.roomId) {
+          <a class="room-row" [routerLink]="['/rooms', room.roomId]">
+            <span class="room-row__name">{{ room.roomName }}</span>
+            <span>Room #{{ room.roomId }}</span>
+            <span>{{ room.memberCount }} {{ room.memberCount === 1 ? 'member' : 'members' }}</span>
+            <span>Role: {{ memberships[room.roomId]?.role ?? 'Unavailable' }}</span>
+            <span>
+              Membership #{{ memberships[room.roomId]?.roomMemberId ?? '—' }}
+            </span>
+            <span>Created by {{ room.createdBy.name }}</span>
+            <span class="room-row__link">View room details</span>
+          </a>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="details-card invitations-card" aria-labelledby="profile-invitations-heading">
+    <div class="rooms-heading">
+      <div>
+        <h2 id="profile-invitations-heading">Room invitations</h2>
+        <p>Pending invitations sent to your account.</p>
+      </div>
+      <button type="button" (click)="loadInvitations()" [disabled]="invitationsLoading">
+        {{ invitationsLoading ? 'Refreshing…' : 'Refresh' }}
+      </button>
     </div>
 
-    <div class="detail">
-      <span>My Monthly Contribution</span>
-      <strong>₹6,500</strong>
-    </div>
+    @if (invitationsError) {
+      <p class="rooms-state rooms-state--error" role="alert">{{ invitationsError }}</p>
+    }
+    @if (invitationMessage) {
+      <p class="invitation-success" role="status">{{ invitationMessage }}</p>
+    }
+    @if (invitationsLoading) {
+      <p class="rooms-state" role="status">Loading invitations…</p>
+    } @else if (invitations.length === 0 && !invitationsError) {
+      <p class="rooms-state">You have no pending invitations.</p>
+    } @else {
+      <div class="invitation-list">
+        @for (invitation of invitations; track invitation.invitationId) {
+          <article class="invitation-row">
+            <div>
+              <h3>{{ invitation.roomName }}</h3>
+              <p>
+                Invited by {{ invitation.invitedByName }} ·
+                {{ invitation.invitedUserEmail }}
+              </p>
+              @if (rooms.length > 0) {
+                @if (rooms[0].roomId === invitation.roomId) {
+                  <small>You already belong to this room; no acceptance is needed.</small>
+                } @else {
+                  <small>
+                    You already belong to {{ rooms[0].roomName }}. You must leave
+                    that room before joining another.
+                  </small>
+                }
+              }
+            </div>
+            <div class="invitation-actions">
+              <button
+                type="button"
+                class="accept"
+                [disabled]="
+                  invitationActionId !== null ||
+                  roomsLoading ||
+                  !!roomsError ||
+                  rooms.length > 0
+                "
+                (click)="acceptInvitation(invitation)"
+              >{{ invitationActionId === invitation.invitationId ? 'Working…' : rooms.length > 0 ? 'Cannot accept' : 'Accept' }}</button>
+              <button
+                type="button"
+                class="decline"
+                [disabled]="invitationActionId !== null"
+                (click)="declineInvitation(invitation)"
+              >Decline</button>
+            </div>
+          </article>
+        }
+      </div>
+    }
   </section>
 
   <section class="settings-card">
-    <h2>Settings</h2>
+    <div class="settings-heading">
+      <div>
+        <h2>Settings</h2>
+        <p>Keep your account details and password up to date.</p>
+      </div>
+    </div>
 
-    <button type="button">Edit Profile</button>
-    <button type="button">Change Password</button>
-    <button type="button" class="logout">Logout</button>
+    @if (profileMessage) {
+      <p class="form-notice form-notice--success" role="status">{{ profileMessage }}</p>
+    }
+    @if (profileError) {
+      <p class="form-notice form-notice--error" role="alert">{{ profileError }}</p>
+    }
+    <button type="button" class="settings-action" (click)="toggleEditProfile()">
+      {{ editingProfile ? 'Cancel profile edit' : 'Edit Profile' }}
+    </button>
+    @if (editingProfile) {
+      <form class="settings-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+        <label for="profile-name">Name</label>
+        <input id="profile-name" type="text" formControlName="name" autocomplete="name">
+        @if (profileForm.controls.name.touched && profileForm.controls.name.hasError('required')) {
+          <small class="field-error">Enter your name.</small>
+        } @else if (profileForm.controls.name.touched && profileForm.controls.name.hasError('maxlength')) {
+          <small class="field-error">Name must be 100 characters or fewer.</small>
+        }
+
+        <label for="profile-email">Email</label>
+        <input id="profile-email" type="email" formControlName="email" autocomplete="email">
+        @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
+          <small class="field-error">Enter a valid email address.</small>
+        }
+
+        <label for="profile-phone">Phone</label>
+        <input id="profile-phone" type="tel" formControlName="phone" autocomplete="tel">
+        @if (profileForm.controls.phone.touched && profileForm.controls.phone.invalid) {
+          <small class="field-error">Enter 8 to 15 digits, optionally prefixed with +.</small>
+        }
+
+        <button type="submit" class="primary-action" [disabled]="profileSubmitting">
+          {{ profileSubmitting ? 'Saving…' : 'Save profile' }}
+        </button>
+      </form>
+    }
+
+    @if (passwordMessage) {
+      <p class="form-notice form-notice--success" role="status">{{ passwordMessage }}</p>
+    }
+    @if (passwordError) {
+      <p class="form-notice form-notice--error" role="alert">{{ passwordError }}</p>
+    }
+    <button type="button" class="settings-action" (click)="toggleChangePassword()">
+      {{ changingPassword ? 'Cancel password change' : 'Change Password' }}
+    </button>
+    @if (changingPassword) {
+      <form class="settings-form" [formGroup]="passwordForm" (ngSubmit)="savePassword()">
+        <label for="current-password">Current password</label>
+        <input
+          id="current-password"
+          type="password"
+          formControlName="currentPassword"
+          autocomplete="current-password"
+        >
+        @if (passwordForm.controls.currentPassword.touched && passwordForm.controls.currentPassword.hasError('required')) {
+          <small class="field-error">Enter your current password.</small>
+        }
+
+        <label for="new-password">New password</label>
+        <input
+          id="new-password"
+          type="password"
+          formControlName="newPassword"
+          autocomplete="new-password"
+        >
+        @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('minlength')) {
+          <small class="field-error">The new password must be at least 8 characters.</small>
+        } @else if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('required')) {
+          <small class="field-error">Enter a new password.</small>
+        }
+
+        <label for="confirm-password">Confirm new password</label>
+        <input
+          id="confirm-password"
+          type="password"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+        >
+        @if (passwordForm.controls.confirmPassword.touched && passwordForm.controls.confirmPassword.hasError('required')) {
+          <small class="field-error">Confirm your new password.</small>
+        } @else if (passwordForm.controls.confirmPassword.touched && passwordForm.hasError('passwordsMismatch')) {
+          <small class="field-error">The new passwords do not match.</small>
+        }
+
+        <button type="submit" class="primary-action" [disabled]="passwordSubmitting">
+          {{ passwordSubmitting ? 'Updating…' : 'Update password' }}
+        </button>
+      </form>
+    }
   </section>
 
 </div>

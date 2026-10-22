@@ -1,0 +1,59 @@
+<section class="form-page">
+  <a class="back-link" routerLink="/">← Back to rooms</a>
+  <div class="form-card">
+    <p class="eyebrow">NEW SHARED SPACE</p>
+    <h1>Create a room</h1>
+    <p class="intro">
+      Your account will be added as this room’s first member and admin.
+    </p>
+
+    @if (membershipLoading) {
+      <p role="status">Checking your current room…</p>
+    } @else if (membershipError) {
+      <p class="form-error" role="alert">{{ membershipError }}</p>
+      <button type="button" (click)="loadMembership()">Try again</button>
+    } @else if (currentRooms.length > 0) {
+      <div class="form-error" role="alert">
+        <p>
+          You already belong to
+          <strong>{{ currentRooms[0].roomName }}</strong>. You can belong to only
+          one room at a time. Leaving a room is not currently supported.
+        </p>
+        <a [routerLink]="['/rooms', currentRooms[0].roomId]">Open your room</a>
+      </div>
+    } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label for="roomName">Room name</label>
+      <input
+        id="roomName"
+        type="text"
+        formControlName="roomName"
+        maxlength="100"
+        placeholder="e.g. Maple House"
+        [attr.aria-invalid]="
+          form.controls.roomName.invalid &&
+          (form.controls.roomName.touched || submitted)
+        "
+      />
+      @if (form.controls.roomName.invalid &&
+        (form.controls.roomName.touched || submitted)) {
+        <span class="field-error">
+          @if (form.controls.roomName.hasError('required')) {
+            Enter a room name.
+          } @else {
+            Room names can be at most 100 characters.
+          }
+        </span>
+      }
+
+      @if (errorMessage) {
+        <p class="form-error" role="alert">{{ errorMessage }}</p>
+      }
+
+      <button type="submit" [disabled]="loading || membershipLoading || membershipError">
+        {{ loading ? 'Creating room…' : 'Create room' }}
+      </button>
+    </form>
+    }
+  </div>
+</section>

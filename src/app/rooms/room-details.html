@@ -1,0 +1,466 @@
+<section class="details-page">
+  <a class="back-link" routerLink="/">Back to rooms</a>
+
+  @if (loading) {
+    <div class="status-message" role="status">Loading room detailsâ€¦</div>
+  } @else if (errorMessage) {
+    <div class="status-message error" role="alert">
+      <h1>Room unavailable</h1>
+      <p>{{ errorMessage }}</p>
+      <button type="button" class="refresh-button" (click)="refresh()">
+        Try again
+      </button>
+      <a routerLink="/">Return to your rooms</a>
+    </div>
+  } @else if (room) {
+    <header class="room-heading">
+      <div>
+        <p class="eyebrow">ROOM</p>
+        <h1>{{ room.roomName }}</h1>
+        
+      </div>
+      <span class="role-badge" [class.role-badge--admin]="isAdmin">
+        {{ currentRole ?? 'Room member' }}
+      </span>
+    </header>
+
+    <section class="room-facts" aria-label="Room information">
+      <div>
+        <span>Room ID</span>
+        <strong>{{ room.roomId }}</strong>
+      </div>
+      <div>
+        <span>Members</span>
+        <strong>{{ room.memberCount }}</strong>
+      </div>
+      <div>
+        <span>Created</span>
+        <strong>{{ room.createdAt | date: 'mediumDate' }}</strong>
+      </div>
+      <div>
+        <span>Room creator</span>
+        <strong>{{ room.createdBy.name }}</strong>
+      </div>
+    </section>
+
+    @if (expenseMessage) {
+      <p class="notice notice--success" role="status">{{ expenseMessage }}</p>
+    }
+
+    <section class="content-card" aria-labelledby="expenses-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="expenses-heading">Room expenses</h2>
+          <p>Recent expenses recorded for this room.</p>
+        </div>
+        <button type="button" class="refresh-button" (click)="refresh()">Refresh</button>
+        
+      </div>
+
+      @if (expensesLoading && expenses.length === 0) {
+        <p class="empty-state" role="status">Loading room expensesâ€¦</p>
+      } @else if (expensesError) {
+        <p class="notice notice--error" role="alert">{{ expensesError }}</p>
+      } @else if (expenses.length === 0) {
+        <p class="empty-state">No expenses have been recorded for this room.</p>
+      } @else {
+        <div class="expense-list">
+          @for (expense of expenses; track expense.expenseId) {
+            <article class="expense-row">
+              <div>
+                <strong>{{ expense.title }}</strong>
+                <span>{{ expense.categoryName }}</span>
+                <small>{{ expense.expenseDate | date: 'mediumDate' }} </small>
+              </div>
+              <strong class="expense-amount">{{ formatInr(expense.amount) }}</strong>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="content-card rent-history" aria-labelledby="rent-history-heading">
+      <div class="section-heading rent-history__heading">
+        <div>
+          <h2 id="rent-history-heading">Monthly rent &amp; expense history</h2>
+          <p>Cycles run from the 7th through the 6th of the following month.</p>
+        </div>
+        @if (rentCycles.length > 0) {
+          <label class="cycle-select">
+            <span>Rent cycle</span>
+            <select
+              [value]="selectedRentCycleStart"
+              (change)="selectRentCycle($event)"
+              aria-label="Choose rent cycle"
+            >
+              @for (cycle of rentCycles; track cycle.startDate) {
+                <option [value]="cycle.startDate">
+                  {{ cycle.startDate | date: 'MMMM' }}
+                </option>
+              }
+            </select>
+          </label>
+        }
+      </div>
+
+      @if (rentCyclesLoading && rentCycles.length === 0) {
+        <p class="empty-state" role="status">Loading monthly history…</p>
+      } @else if (rentCyclesError) {
+        <p class="notice notice--error" role="alert">{{ rentCyclesError }}</p>
+        <button type="button" class="refresh-button" (click)="refreshRentCycles()">
+          Retry
+        </button>
+      } @else if (selectedRentCycle; as cycle) {
+        <div class="cycle-totals">
+          <div>
+            <span>Rent expenses</span>
+            <strong>{{ formatInr(cycle.rentAmount) }}</strong>
+          </div>
+          <div>
+            <span>All expenses</span>
+            <strong>{{ formatInr(cycle.expenseTotal) }}</strong>
+          </div>
+          <div>
+            <span>Rent payment status</span>
+            <strong>Not tracked</strong>
+          </div>
+        </div>
+        <p class="cycle-note">
+          Cycle balances include expenses and shares only; settlements are separate.
+        </p>
+
+        <h3 class="cycle-subheading">Member shares and payments</h3>
+        @if (cycle.members.length === 0) {
+          <p class="empty-state">There are no active room members to summarize.</p>
+        } @else {
+          <div class="cycle-member-list">
+            @for (member of cycle.members; track member.memberId) {
+              <article class="cycle-member-row">
+                <strong data-label="Member">{{ member.memberName }}</strong>
+                <span data-label="Share">{{ formatInr(member.shareAmount) }}</span>
+                <span data-label="Paid">{{ formatInr(member.paidAmount) }}</span>
+                <span
+                  data-label="Net balance"
+                  [class.balance-positive]="member.netBalance > 0"
+                  [class.balance-negative]="member.netBalance < 0"
+                >
+                  Net {{ formatInr(member.netBalance) }}
+                </span>
+              </article>
+            }
+          </div>
+        }
+
+        <h3 class="cycle-subheading">Expenses in this cycle</h3>
+        @if (cycle.expenses.length === 0) {
+          <p class="empty-state">
+            No expenses have been recorded for this rent cycle.
+          </p>
+        } @else {
+          <div class="expense-list">
+            @for (expense of cycle.expenses; track expense.expenseId) {
+              <article class="expense-row">
+                <div>
+                  <strong>{{ expense.title }}</strong>
+                  <span>{{ expense.categoryName }} · Paid by {{ expense.payerName }}</span>
+                  <small>{{ expense.expenseDate | date: 'mediumDate' }}</small>
+                </div>
+                <strong class="expense-amount">{{ formatInr(expense.amount) }}</strong>
+              </article>
+            }
+          </div>
+        }
+      } @else {
+        <p class="empty-state">No monthly history is available yet.</p>
+      }
+    </section>
+
+    @if (invitationError) {
+      <p class="notice notice--error" role="alert">{{ invitationError }}</p>
+    }
+    @if (invitationMessage) {
+      <p class="notice notice--success" role="status">{{ invitationMessage }}</p>
+    }
+    @if (memberActionError) {
+      <p class="notice notice--error" role="alert">{{ memberActionError }}</p>
+    }
+    @if (memberActionMessage) {
+      <p class="notice notice--success" role="status">{{ memberActionMessage }}</p>
+    }
+    @if (absenceMessage) {
+      <p class="notice notice--success" role="status">{{ absenceMessage }}</p>
+    }
+
+    <section class="content-card" aria-labelledby="members-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="members-heading">Room members</h2>
+          <p>{{ members.length }} {{ members.length === 1 ? 'person' : 'people' }} in this room</p>
+        </div>
+        <button type="button" class="refresh-button" (click)="refresh()">Refresh</button>
+      </div>
+
+      @if (membersLoading) {
+        <p class="empty-state" role="status">Loading room membersâ€¦</p>
+      } @else if (membersError) {
+        <p class="notice notice--error" role="alert">{{ membersError }}</p>
+      } @else if (members.length === 0) {
+        <p class="empty-state">No members are listed for this room.</p>
+      } @else {
+        <div class="member-list">
+          @for (member of members; track member.roomMemberId) {
+            <article class="member-row">
+              <div class="avatar" aria-hidden="true">{{ member.name.charAt(0).toUpperCase() }}</div>
+              <div class="member-info">
+                <h3>{{ member.name }}</h3>
+                <p>{{ member.email }}</p>
+                <small>Membership #{{ member.roomMemberId }}</small>
+              </div>
+              <span class="role-badge" [class.role-badge--admin]="member.role === 'ADMIN'">
+                {{ member.role }}
+              </span>
+              @if (
+                isAdmin &&
+                member.userId !== currentUserId &&
+                member.userId !== room.createdBy.userId
+              ) {
+                <div class="member-actions">
+                  @if (pendingRemoveUserId === member.userId) {
+                    <span>Remove {{ member.name }}?</span>
+                    <button
+                      type="button"
+                      class="cancel-button"
+                      [disabled]="memberActionUserId !== null"
+                      (click)="removeMember(member)"
+                    >
+                      {{ memberActionUserId === member.userId ? 'Removingâ€¦' : 'Confirm remove' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="text-button"
+                      (click)="cancelRemoveMember()"
+                    >
+                      Keep member
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="cancel-button"
+                      [disabled]="memberActionUserId !== null"
+                      (click)="beginRemoveMember(member)"
+                    >
+                      Remove
+                    </button>
+                  }
+                  @if (member.role === 'MEMBER') {
+                    @if (pendingAdminTransferUserId === member.userId) {
+                      <span>Transfer admin to {{ member.name }}?</span>
+                      <button
+                        type="button"
+                        class="admin-button"
+                        [disabled]="memberActionUserId !== null"
+                        (click)="transferAdmin(member)"
+                      >
+                        {{ memberActionUserId === member.userId ? 'Transferringâ€¦' : 'Confirm transfer' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="text-button"
+                        (click)="cancelAdminTransfer()"
+                      >
+                        Cancel
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="admin-button"
+                        [disabled]="memberActionUserId !== null"
+                        (click)="beginAdminTransfer(member)"
+                      >
+                        Make admin
+                      </button>
+                    }
+                  }
+                </div>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="content-card absence-card" aria-labelledby="absence-heading">
+      <div class="section-heading">
+        <div>
+          
+          <h2 id="absence-heading">Room member status</h2>
+         
+        </div>
+        <button
+          type="button"
+          class="refresh-button"
+          [disabled]="membersLoading"
+          (click)="refresh()"
+        >Refresh</button>
+      </div>
+
+      @if (absenceMessage) {
+        <p class="notice notice--success" role="status">{{ absenceMessage }}</p>
+      }
+      @if (absenceError) {
+        <p class="notice notice--error" role="alert">{{ absenceError }}</p>
+      }
+      @if (membersLoading) {
+        <p class="empty-state" role="status">Loading room members…</p>
+      } @else if (membersError) {
+        <p class="notice notice--error" role="alert">{{ membersError }}</p>
+        <button type="button" class="text-button" (click)="refresh()">Retry member list</button>
+      } @else if (members.length === 0) {
+        <p class="empty-state">There are no room members to show.</p>
+      } @else {
+        <div class="absence-members">
+          @for (member of members; track member.roomMemberId) {
+            <article class="absence-member">
+              <div class="absence-member__heading">
+                <div>
+                  <h3>{{ member.name }}</h3>
+                  <p>{{ member.email }}</p>
+                  @if (absenceHistoryLoading[member.roomMemberId]) {
+                    <small role="status">Loading status…</small>
+                  } @else if (absenceHistoryErrors[member.roomMemberId]) {
+                    <small class="field-error" role="alert">
+                      {{ absenceHistoryErrors[member.roomMemberId] }}
+                    </small>
+                  } @else {
+                    <span
+                      class="status-badge"
+                      [class.status-badge--pending]="hasActiveAbsence(member.roomMemberId)"
+                      [class.status-badge--completed]="!hasActiveAbsence(member.roomMemberId)"
+                    >{{ hasActiveAbsence(member.roomMemberId) ? 'Absent' : 'Present' }}</span>
+                  }
+                </div>
+                @if (isAdmin && !absenceHistoryErrors[member.roomMemberId]) {
+                  <button
+                    type="button"
+                    class="admin-button"
+                    [disabled]="absenceSubmitting || absenceHistoryLoading[member.roomMemberId]"
+                    (click)="toggleMemberAbsence(member)"
+                  >
+                    @if (absenceSubmitting && absenceActionMemberId === member.roomMemberId) {
+                      Saving…
+                    } @else if (hasActiveAbsence(member.roomMemberId)) {
+                      Mark Present
+                    } @else {
+                      Mark Absent
+                    }
+                  </button>
+                }
+                @if (absenceHistoryErrors[member.roomMemberId]) {
+                  <button
+                    type="button"
+                    class="text-button"
+                    (click)="refreshAbsenceHistory(member.roomMemberId)"
+                  >Retry status</button>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+    @if (isAdmin) {
+      <section class="content-card admin-card" aria-labelledby="invite-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">ADMIN CONTROLS</p>
+            <h2 id="invite-heading">Room invitations</h2>
+            <p>Invite an existing SplitRoom user by email. They join only after accepting.</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="admin-button"
+          (click)="showInvitationForm = !showInvitationForm"
+        >
+          {{ showInvitationForm ? 'Close invite form' : 'Invite roommate' }}
+        </button>
+        @if (showInvitationForm) {
+          <form [formGroup]="invitationForm" (ngSubmit)="sendInvitation()">
+            <label for="invitedUserEmail">Email address</label>
+            <div class="invite-form">
+              <input
+                id="invitedUserEmail"
+                type="email"
+                autocomplete="email"
+                formControlName="invitedUserEmail"
+                placeholder="name@example.com"
+              />
+              <button type="submit" [disabled]="inviting">
+                {{ inviting ? 'Sendingâ€¦' : 'Send invitation' }}
+              </button>
+            </div>
+            @if (invitationForm.controls.invitedUserEmail.invalid &&
+              invitationForm.controls.invitedUserEmail.touched) {
+              <small class="field-error">Enter a valid email address.</small>
+            }
+          </form>
+        }
+
+        <div class="pending-heading">
+          <h3>{{ invitationStatusFilter ? 'Pending invitations' : 'Invitation history' }}</h3>
+          <button type="button" class="text-button" (click)="toggleInvitationHistory()">
+            {{ invitationStatusFilter ? 'View history' : 'Show pending only' }}
+          </button>
+          <button type="button" class="text-button" (click)="refreshInvitations()">
+            Refresh
+          </button>
+        </div>
+        @if (invitationsLoading) {
+          <p class="empty-state">Loading invitationsâ€¦</p>
+        } @else if (invitations.length === 0) {
+          <p class="empty-state">
+            {{ invitationStatusFilter ? 'There are no pending invitations.' : 'There is no invitation history yet.' }}
+          </p>
+        } @else {
+          <div class="pending-list">
+            @for (invitation of invitations; track invitation.invitationId) {
+              <div class="pending-row">
+                <div>
+                  <strong>{{ invitation.invitedUserName }} Â· {{ invitation.invitedUserId }}</strong>
+                  <small>{{ invitation.status }} Â· Sent {{ invitation.createdAt | date: 'mediumDate' }}</small>
+                </div>
+                @if (invitation.status === 'PENDING') {
+                  @if (pendingCancelInvitationId === invitation.invitationId) {
+                    <div class="member-actions">
+                      <span>Cancel this invitation?</span>
+                      <button
+                        type="button"
+                        class="cancel-button"
+                        [disabled]="cancellingInvitationId !== null"
+                        (click)="cancelInvitation(invitation)"
+                      >
+                        {{ cancellingInvitationId === invitation.invitationId ? 'Cancellingâ€¦' : 'Confirm cancel' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="text-button"
+                        (click)="dismissCancelInvitation()"
+                      >Keep invitation</button>
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="cancel-button"
+                      [disabled]="cancellingInvitationId !== null"
+                      (click)="requestCancelInvitation(invitation)"
+                    >Cancel</button>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+</section>

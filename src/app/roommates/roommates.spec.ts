@@ -1,110 +1,131 @@
+import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+import { AuthService } from '../auth/auth.service';
+import { RoomService } from '../rooms/room.service';
 import { RoommatesComponent } from './roommates';
 
 describe('RoommatesComponent', () => {
-  beforeEach(async () => {
+  it('automatically loads and displays the current room members', async () => {
+    const updateRentCycleMemberStatus = vi.fn((..._args: unknown[]) =>
+      of({ memberId: 21, status: 'CLEAR' as const })
+    );
     await TestBed.configureTestingModule({
       imports: [RoommatesComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: AuthService,
+          useValue: { currentUser: { userId: 7 } },
+        },
+        {
+          provide: RoomService,
+          useValue: {
+            getMyRooms: () =>
+              of([
+                {
+                  roomId: 12,
+                  roomName: 'Shared Flat',
+                  createdBy: {
+                    userId: 7,
+                    name: 'Test User',
+                    email: 'test@example.com',
+                  },
+                  createdAt: '2026-10-21T10:00:00',
+                  memberCount: 3,
+                },
+              ]),
+            getMembers: () =>
+              of([
+                {
+                  roomMemberId: 21,
+                  userId: 7,
+                  name: 'Test User',
+                  email: 'test@example.com',
+                  role: 'ADMIN' as const,
+                },
+                {
+                  roomMemberId: 22,
+                  userId: 8,
+                  name: 'Roommate',
+                  email: 'roommate@example.com',
+                  role: 'MEMBER' as const,
+                },
+              ]),
+            getRoomRentCycles: () =>
+              of([
+                {
+                  startDate: '2026-10-07',
+                  endDate: '2026-11-06',
+                  currentCycle: true,
+                  rentAmount: 0,
+                  expenseTotal: 100,
+                  rentPaymentStatus: 'NOT_TRACKED' as const,
+                  expenses: [],
+                  members: [
+                    {
+                      memberId: 21,
+                      memberName: 'Test User',
+                      shareAmount: 50,
+                      paidAmount: 0,
+                      netBalance: -50,
+                      completedSettlementsSent: 0,
+                      completedSettlementsReceived: 0,
+                    },
+                    {
+                      memberId: 22,
+                      memberName: 'Roommate',
+                      shareAmount: 50,
+                      paidAmount: 100,
+                      netBalance: 50,
+                      completedSettlementsSent: 0,
+                      completedSettlementsReceived: 0,
+                    },
+                  ],
+                },
+              ]),
+            getRentCycleMemberStatuses: () =>
+              of([{ memberId: 21, status: 'PENDING' as const }]),
+            updateRentCycleMemberStatus,
+          },
+        },
+      ],
     }).compileComponents();
-  });
 
-  it('should require an actual departure date before confirming absence', () => {
-    const fixture = TestBed.createComponent(RoommatesComponent);
-    const component = fixture.componentInstance;
-    const roommate = component.roommates[0];
-
-    component.beginAbsence(roommate);
-    component.confirmAbsence(roommate);
-
-    expect(roommate.status).toBe('Active');
-    expect(component.errorMessage).toBe('Enter a valid actual departure date.');
-  });
-
-  it('should save the actual departure date', () => {
-    const fixture = TestBed.createComponent(RoommatesComponent);
-    const component = fixture.componentInstance;
-    const roommate = component.roommates[0];
-
-    component.beginAbsence(roommate);
-    component.absenceDrafts[roommate.id].departureDate = '2026-10-15';
-    component.confirmAbsence(roommate);
-
-    expect(roommate.status).toBe('Temporarily Absent');
-    expect(roommate.departureDate).toBe('2026-10-15');
-    expect(roommate.returnDate).toBe('');
-  });
-
-  it('should require and record the actual return date, retaining absence dates', () => {
-    const fixture = TestBed.createComponent(RoommatesComponent);
-    const component = fixture.componentInstance;
-    const roommate = component.roommates[0];
-
-    component.beginAbsence(roommate);
-    component.absenceDrafts[roommate.id].departureDate = '2026-10-15';
-    component.confirmAbsence(roommate);
-    component.beginReturn(roommate);
-    component.confirmReturn(roommate);
-
-    expect(component.errorMessage).toBe('Enter a valid actual return date.');
-    expect(roommate.status).toBe('Temporarily Absent');
-
-    component.returnDateDrafts[roommate.id] = '2026-10-20';
-    component.confirmReturn(roommate);
-
-    expect(roommate.status).toBe('Active');
-    expect(roommate.departureDate).toBe('2026-10-15');
-    expect(roommate.returnDate).toBe('2026-10-20');
-  });
-
-  it('should not accept a return date before departure', () => {
-    const fixture = TestBed.createComponent(RoommatesComponent);
-    const component = fixture.componentInstance;
-    const roommate = component.roommates[0];
-
-    component.beginAbsence(roommate);
-    component.absenceDrafts[roommate.id].departureDate = '2026-10-15';
-    component.confirmAbsence(roommate);
-    component.beginReturn(roommate);
-    component.returnDateDrafts[roommate.id] = '2026-10-14';
-    component.confirmReturn(roommate);
-
-    expect(roommate.status).toBe('Temporarily Absent');
-    expect(component.errorMessage).toBe(
-      'Return date cannot be before the departure date.'
-    );
-  });
-
-  it('should not display roommate expense-category controls', () => {
     const fixture = TestBed.createComponent(RoommatesComponent);
     fixture.detectChanges();
-    const categorySection = (fixture.nativeElement as HTMLElement).querySelector(
-      '.category-sharing'
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.textContent).toContain('Shared Flat');
+    expect(page.textContent).toContain('Room members');
+    expect(page.textContent).toContain('Test User');
+    expect(page.textContent).toContain('Roommate');
+    expect(page.textContent).toContain('ADMIN');
+    expect(page.textContent).toContain('Monthly member balances');
+    expect(page.textContent).toContain('Payment status');
+    expect(page.textContent).toContain('Pending');
+    expect(page.textContent).toContain(
+      'It does not create a settlement or change expenses, shares, or balances.'
     );
-
-    expect(categorySection).toBeNull();
-  });
-
-  it('should restore roommate rules when returning to the page', () => {
-    const firstFixture = TestBed.createComponent(RoommatesComponent);
-    const firstComponent = firstFixture.componentInstance;
-    const roommate = firstComponent.roommates.find(
-      item => item.name === 'Rahul'
+    const statusSelect = page.querySelector(
+      '[aria-label="Payment status for Test User"]'
+    ) as HTMLSelectElement;
+    statusSelect.value = 'CLEAR';
+    statusSelect.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(updateRentCycleMemberStatus).toHaveBeenCalledWith(
+      12,
+      '2026-10-07',
+      21,
+      'CLEAR'
     );
-
-    if (!roommate) {
-      throw new Error('Expected Rahul in the roommate list.');
-    }
-
-    firstComponent.beginReturn(roommate);
-    firstComponent.returnDateDrafts[roommate.id] = '2026-10-20';
-    firstComponent.confirmReturn(roommate);
-    firstFixture.destroy();
-
-    const secondFixture = TestBed.createComponent(RoommatesComponent);
-    const restoredRoommate = secondFixture.componentInstance.roommates.find(
-      item => item.name === 'Rahul'
-    );
-
-    expect(restoredRoommate?.status).toBe('Active');
+    expect(statusSelect.value).toBe('CLEAR');
+    expect(statusSelect.disabled).toBe(true);
+    expect(page.querySelector('a[href="/rooms/12"]')).not.toBeNull();
+    expect(page.textContent).not.toContain('Choose a room');
   });
 });

@@ -1,0 +1,91 @@
+<section class="my-expenses-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">MY EXPENSES</p>
+      <h1>{{ currentCycleLabel }}</h1>
+    </div>
+    <a class="primary-button" routerLink="/dashboard">Back to dashboard</a>
+  </header>
+
+  @if (loading) {
+    <p class="status-message" role="status">Loading your expense history…</p>
+  } @else if (errorMessage) {
+    <div class="notice error" role="alert">
+      <p>{{ errorMessage }}</p>
+      <button type="button" (click)="loadMyExpenses()">Try again</button>
+    </div>
+  } @else {
+    @if (rentCycles.length > 0) {
+      <section class="cycle-filter" aria-label="Select monthly expense history">
+        <label for="expense-cycle">Month history</label>
+        <select
+          id="expense-cycle"
+          [value]="selectedCycleStart"
+          (change)="selectCycle($event)"
+        >
+          @for (cycle of rentCycles; track cycle.startDate) {
+            <option [value]="cycle.startDate">
+              {{ formatCycleLabel(cycle.startDate) }}
+              @if (cycle.currentCycle) { (Current cycle) }
+            </option>
+          }
+        </select>
+        @if (currentCycle) {
+          <small>
+            {{ currentCycle.startDate | date:'dd MMM yyyy' }} –
+            {{ currentCycle.endDate | date:'dd MMM yyyy' }}
+          </small>
+        }
+      </section>
+    }
+
+    <section class="stats-grid" aria-label="My expense summary">
+      <article class="stat-card">
+        <span>Total paid</span>
+        <strong>{{ totalSpentThisCycle | currency:'INR':'symbol':'1.2-2' }}</strong>
+      </article>
+      <article class="stat-card">
+        <span>Your share</span>
+        <strong>{{ totalShareThisCycle | currency:'INR':'symbol':'1.2-2' }}</strong>
+      </article>
+      <article class="stat-card">
+        <span>Net position</span>
+        <strong [class.balance-positive]="totalSpentThisCycle - totalShareThisCycle > 0" [class.balance-negative]="totalSpentThisCycle - totalShareThisCycle < 0" [class.balance-neutral]="totalSpentThisCycle - totalShareThisCycle === 0">
+          {{ formatNetPosition(totalSpentThisCycle - totalShareThisCycle) }}
+        </strong>
+      </article>
+    </section>
+
+    @if (myExpenses.length === 0) {
+      <section class="empty-state">
+        <h2>No expenses yet</h2>
+        <p>You have not paid for or shared any expenses in {{ currentCycleLabel }}.</p>
+      </section>
+    } @else {
+      <section class="expense-table" aria-label="User expense history list">
+        <header class="table-header">
+          <span>Expense</span>
+          <span>Category</span>
+          <span>Paid</span>
+          <span>Your share</span>
+          <span>Net</span>
+        </header>
+
+        @for (expense of myExpenses; track expense.expenseId) {
+          <article class="expense-row">
+            <div class="expense-title">
+              <strong>{{ expense.title }}</strong>
+              <small>{{ expense.expenseDate | date:'dd MMM yyyy' }}</small>
+            </div>
+            <span>{{ expense.categoryName }}</span>
+            <span>{{ expense.paidAmount | currency:'INR':'symbol':'1.2-2' }}</span>
+            <span>{{ expense.shareAmount | currency:'INR':'symbol':'1.2-2' }}</span>
+            <span [class.balance-positive]="expense.netImpact > 0" [class.balance-negative]="expense.netImpact < 0" [class.balance-neutral]="expense.netImpact === 0">
+              {{ formatNetPosition(expense.netImpact) }}
+            </span>
+          </article>
+        }
+      </section>
+    }
+  }
+</section>

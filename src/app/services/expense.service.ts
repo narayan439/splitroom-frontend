@@ -29,85 +29,11 @@ export interface AbsenceSharingRules {
   providedIn: 'root'
 })
 export class ExpenseService {
-  private nextId = 5;
+  private nextId = 1;
 
-  roommateRules: RoommateRule[] = [
-    {
-      name: 'Narayan',
-      email: 'narayan@example.com',
-      status: 'Active',
-      departureDate: '',
-      returnDate: '',
-      sharedCategories: ['Rent', 'Electricity', 'Groceries', 'Water', 'Other'],
-      absenceSharing: this.defaultAbsenceSharing()
-    },
-    {
-      name: 'Rahul',
-      email: 'rahul@example.com',
-      status: 'Temporarily Absent',
-      departureDate: '2026-10-15',
-      returnDate: '',
-      sharedCategories: ['Rent', 'Electricity', 'Groceries', 'Water', 'Other'],
-      absenceSharing: this.defaultAbsenceSharing()
-    },
-    {
-      name: 'Amit',
-      email: 'amit@example.com',
-      status: 'Active',
-      departureDate: '',
-      returnDate: '',
-      sharedCategories: ['Rent', 'Electricity', 'Groceries', 'Water', 'Other'],
-      absenceSharing: this.defaultAbsenceSharing()
-    },
-    {
-      name: 'Priya',
-      email: 'priya@example.com',
-      status: 'Active',
-      departureDate: '',
-      returnDate: '',
-      sharedCategories: ['Rent', 'Electricity', 'Groceries', 'Water', 'Other'],
-      absenceSharing: this.defaultAbsenceSharing()
-    }
-  ];
+  roommateRules: RoommateRule[] = [];
 
-  readonly expenses: Expense[] = [
-    {
-      id: 1,
-      title: 'Monthly Rent',
-      category: 'Rent',
-      amount: 12000,
-      paidBy: 'Narayan',
-      date: '2026-10-01',
-      roommates: ['Narayan', 'Rahul', 'Amit', 'Priya']
-    },
-    {
-      id: 2,
-      title: 'Electricity Bill',
-      category: 'Electricity',
-      amount: 2400,
-      paidBy: 'Rahul',
-      date: '2026-10-05',
-      roommates: ['Narayan', 'Rahul', 'Amit']
-    },
-    {
-      id: 3,
-      title: 'Vegetables',
-      category: 'Groceries',
-      amount: 800,
-      paidBy: 'Amit',
-      date: '2026-10-08',
-      roommates: ['Narayan', 'Rahul', 'Amit']
-    },
-    {
-      id: 4,
-      title: 'Internet Bill',
-      category: 'Internet',
-      amount: 1000,
-      paidBy: 'Narayan',
-      date: '2026-10-10',
-      roommates: ['Narayan', 'Rahul', 'Amit', 'Priya']
-    }
-  ];
+  readonly expenses: Expense[] = [];
 
   addExpense(expense: Omit<Expense, 'id'>): Expense {
     const savedExpense: Expense = {

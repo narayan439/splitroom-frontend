@@ -1,36 +1,77 @@
-<div class="login-page">
+<section class="auth-page">
+  <div class="auth-card">
+    <a class="brand" routerLink="/">Split<span>Room</span></a>
+    <p class="eyebrow">Welcome back</p>
+    <h1>Sign in to your account</h1>
+    <p class="intro">Keep shared expenses clear and simple.</p>
 
-  <div class="login-card">
+    @if (registrationComplete) {
+      <p class="form-success" role="status">
+        Account created. Sign in to continue.
+      </p>
+    }
 
-    <h1>SplitRoom</h1>
-    <p>Manage shared expenses with your roommates.</p>
-
-    <form (ngSubmit)="login()">
-
-      <label>Email</label>
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label for="email">Email</label>
       <input
+        id="email"
         type="email"
-        name="email"
-        [(ngModel)]="email"
-        placeholder="Enter your email"
-        required
+        autocomplete="email"
+        formControlName="email"
+        placeholder="you@example.com"
+        [attr.aria-invalid]="showError('email')"
+        [attr.aria-describedby]="showError('email') ? 'email-error' : null"
       />
+      @if (showError('email')) {
+        <span id="email-error" class="field-error">
+          @if (form.controls.email.hasError('required')) {
+            Email is required.
+          } @else {
+            Enter a valid email address.
+          }
+        </span>
+      }
 
-      <label>Password</label>
-      <input
-        type="password"
-        name="password"
-        [(ngModel)]="password"
-        placeholder="Enter your password"
-        required
-      />
+      <label for="password">Password</label>
+      <div class="password-field">
+        <input
+          id="password"
+          [type]="showPassword ? 'text' : 'password'"
+          autocomplete="current-password"
+          formControlName="password"
+          placeholder="Enter your password"
+          [attr.aria-invalid]="showError('password')"
+          [attr.aria-describedby]="showError('password') ? 'password-error' : null"
+        />
+        <button
+          class="password-toggle"
+          type="button"
+          [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+          [attr.aria-pressed]="showPassword"
+          (click)="togglePasswordVisibility()"
+        >
+          {{ showPassword ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (showError('password')) {
+        <span id="password-error" class="field-error">Password is required.</span>
+      }
 
-      <button type="submit">Login</button>
+      @if (errorMessage) {
+        <p class="form-error" role="alert">{{ errorMessage }}</p>
+      }
 
-      <p class="message">{{ message }}</p>
-
+      <button type="submit" [disabled]="loading">
+        @if (loading) {
+          Signing in…
+        } @else {
+          Sign in
+        }
+      </button>
     </form>
 
+    <p class="auth-switch">
+      New to SplitRoom? <a routerLink="/register">Create an account</a>
+    </p>
   </div>
-
-</div>
+</section>

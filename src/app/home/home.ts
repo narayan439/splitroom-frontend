@@ -17,36 +17,14 @@ interface Expense {
   styleUrl: './home.scss'
 })
 export class Home {
-  roomName = 'Room 204';
-  month = 'October 2026';
+  roomName = '';
+  month = '';
 
-  totalExpenses = 18500;
-  myContribution = 6500;
-  myBalance = 1200;
-  monthlyRent = 12000;
- rentDueDate = 1;
+  totalExpenses = 0;
+  myContribution = 0;
+  myBalance = 0;
+  monthlyRent = 0;
+  rentDueDate = 1;
 
-  expenses: Expense[] = [
-    {
-      title: 'Room Rent',
-      category: 'Rent',
-      amount: 12000,
-      paidBy: 'Rahul',
-      date: 'Oct 01'
-    },
-    {
-      title: 'Electricity Bill',
-      category: 'Electricity',
-      amount: 3500,
-      paidBy: 'Narayan',
-      date: 'Oct 05'
-    },
-    {
-      title: 'Vegetables',
-      category: 'Groceries',
-      amount: 3000,
-      paidBy: 'Amit',
-      date: 'Oct 08'
-    }
-  ];
+  expenses: Expense[] = [];
 }

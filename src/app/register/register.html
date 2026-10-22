@@ -1,0 +1,149 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <a class="brand" routerLink="/">Split<span>Room</span></a>
+    <p class="eyebrow">Get started</p>
+    <h1>Create your account</h1>
+    <p class="intro">Make sharing a home and expenses easier.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label for="name">Full name</label>
+      <input
+        id="name"
+        type="text"
+        autocomplete="name"
+        formControlName="name"
+        placeholder="Your name"
+        [attr.aria-invalid]="showError('name')"
+      />
+      @if (showError('name')) {
+        <span class="field-error">
+          @if (form.controls.name.hasError('required')) {
+            Name is required.
+          } @else {
+            Name must be 100 characters or fewer.
+          }
+          @if (fieldError('name')) {
+            <span class="field-error">{{ fieldError('name') }}</span>
+          }
+        </span>
+      }
+
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        autocomplete="email"
+        formControlName="email"
+        placeholder="you@example.com"
+        [attr.aria-invalid]="showError('email')"
+      />
+      @if (showError('email')) {
+        <span class="field-error">
+          @if (form.controls.email.hasError('required')) {
+            Email is required.
+          } @else {
+            Enter a valid email address.
+          }
+          @if (fieldError('email')) {
+            <span class="field-error">{{ fieldError('email') }}</span>
+          }
+        </span>
+      }
+
+      <label for="phone">Phone number</label>
+      <input
+        id="phone"
+        type="tel"
+        autocomplete="tel"
+        formControlName="phone"
+        placeholder="9876543210"
+        [attr.aria-invalid]="showError('phone')"
+      />
+      @if (showError('phone')) {
+        <span class="field-error">
+          Enter 8–15 digits, optionally starting with +.
+        </span>
+      }
+      @if (fieldError('phone')) {
+        <span class="field-error">{{ fieldError('phone') }}</span>
+      }
+
+      <label for="password">Password</label>
+      <div class="password-field">
+        <input
+          id="password"
+          [type]="showPassword ? 'text' : 'password'"
+          autocomplete="new-password"
+          formControlName="password"
+          placeholder="At least 8 characters"
+          [attr.aria-invalid]="showError('password')"
+        />
+        <button
+          class="password-toggle"
+          type="button"
+          [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+          [attr.aria-pressed]="showPassword"
+          (click)="togglePasswordVisibility('password')"
+        >
+          {{ showPassword ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (showError('password')) {
+        <span class="field-error">
+          @if (form.controls.password.hasError('required')) {
+            Password is required.
+          } @else if (form.controls.password.hasError('minlength')) {
+            Password must be at least 8 characters.
+          } @else {
+            Password must be 72 characters or fewer.
+          }
+          @if (fieldError('password')) {
+            <span class="field-error">{{ fieldError('password') }}</span>
+          }
+        </span>
+      }
+
+      <label for="confirmPassword">Confirm password</label>
+      <div class="password-field">
+        <input
+          id="confirmPassword"
+          [type]="showConfirmPassword ? 'text' : 'password'"
+          autocomplete="new-password"
+          formControlName="confirmPassword"
+          placeholder="Enter your password again"
+          [attr.aria-invalid]="showError('confirmPassword') || passwordMismatch"
+        />
+        <button
+          class="password-toggle"
+          type="button"
+          [attr.aria-label]="showConfirmPassword ? 'Hide confirmation' : 'Show confirmation'"
+          [attr.aria-pressed]="showConfirmPassword"
+          (click)="togglePasswordVisibility('confirmPassword')"
+        >
+          {{ showConfirmPassword ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (showError('confirmPassword')) {
+        <span class="field-error">Please confirm your password.</span>
+      } @else if (passwordMismatch) {
+        <span class="field-error">Passwords do not match.</span>
+      }
+
+      @if (errorMessage) {
+        <p class="form-error" role="alert">{{ errorMessage }}</p>
+      }
+
+      <button type="submit" [disabled]="loading">
+        @if (loading) {
+          Creating account…
+        } @else {
+          Create account
+        }
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      Already registered? <a routerLink="/login">Sign in</a>
+    </p>
+  </div>
+</section>

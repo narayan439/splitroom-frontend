@@ -1,0 +1,134 @@
+<section class="room-dashboard">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">SPLITROOM OVERVIEW</p>
+      <h1>Welcome, {{ currentUserName }}</h1>
+      <p class="description">Your shared expense summary.</p>
+    </div>
+    @if (room) {
+      <a
+        class="primary-button"
+        [routerLink]="['/rooms', room.roomId, 'expenses', 'new']"
+      >Add Expense</a>
+    } @else if (!loading && !errorMessage) {
+      <a class="primary-button" routerLink="/rooms/new">Create a room</a>
+    }
+  </header>
+
+  @if (loading) {
+    <p class="loading" role="status">Loading your room…</p>
+  } @else if (errorMessage) {
+    <p class="message error" role="alert">
+      {{ errorMessage }}
+      <button type="button" (click)="loadRoom()">Try again</button>
+    </p>
+  } @else if (!room) {
+    <section class="empty-state">
+      <h2>No room yet</h2>
+      <p>Create a room to start tracking shared expenses.</p>
+      <a class="primary-button" routerLink="/rooms/new">Create a room</a>
+    </section>
+  } @else {
+    <section class="summary-section" aria-labelledby="financial-summary-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="financial-summary-title">Financial summary</h2>
+          <p>
+            @if (currentCycle; as cycle) {
+              {{ cycle.startDate | date:'MMMM' }} ·
+            }
+          </p>
+        </div>
+        @if (summaryLoading) {
+          <span class="muted" role="status">Updating…</span>
+        }
+        
+      </div>
+
+      @if (summaryError) {
+        <p class="message error" role="alert">
+          {{ summaryError }}
+          <button type="button" (click)="loadRoom()">Try again</button>
+        </p>
+      }
+
+      <div class="summary-grid">
+        <article class="summary-card summary-card--total">
+          <span>Total Room Spending</span>
+          <strong class="summary-value">
+            @if (summaryAvailable) {
+              {{ totalRoomSpending | currency:'INR':'symbol':'1.2-2' }}
+            } @else {
+              —
+            }
+          </strong>
+        </article>
+        <article class="summary-card">
+          <span>Your Net Position</span>
+          <strong
+            class="summary-value"
+            [class.balance-positive]="signedBalance !== null && signedBalance > 0"
+            [class.balance-negative]="signedBalance !== null && signedBalance < 0"
+            [class.balance-settled]="signedBalance === 0"
+          >{{ signedBalance === null ? '—' : formatNetPosition(signedBalance) }}</strong>
+          <!-- <small>Cycle payments less your shares, with completed settlements</small> -->
+          @if (previousCycleNetPosition !== null && previousCycleNetPosition !== 0) {
+            <small
+              [class.balance-positive]="previousCycleNetPosition > 0"
+              [class.balance-negative]="previousCycleNetPosition < 0"
+            >
+              Previous cycles net: {{ formatNetPosition(previousCycleNetPosition) }}
+            </small>
+          }
+        </article>
+      </div>
+    </section>
+
+    <section class="my-expenses-section" aria-labelledby="my-expenses-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="my-expenses-title">My Share</h2>
+          <p>
+            @if (currentCycle) {
+              {{ currentCycleMonthLabel }} 
+            } @else {
+              Your expenses in the current rent cycle.
+            }
+          </p>
+        </div>
+        
+      </div>
+
+      @if (myExpensesLoading) {
+        <p class="muted" role="status">Loading your expenses…</p>
+      } @else if (myExpenses.length === 0) {
+        <p class="empty-list">You do not have any expenses recorded in this cycle yet.</p>
+      } @else {
+        <div class="my-expenses-list">
+          @for (expense of myExpenses.slice(0, 5); track expense.expenseId) {
+            <article class="my-expense-item">
+              <div class="my-expense-details">
+                <strong>{{ expense.title }}</strong>
+                <small>{{ expense.categoryName }} · {{ expense.expenseDate | date:'dd MMM yyyy' }}</small>
+              </div>
+              <div class="my-expense-amounts">
+               
+                <small>
+                  @if (expense.paidByMe) {
+                   Paid=  {{ expense.paidAmount | currency:'INR':'symbol':'1.2-2' }} ·
+                  }
+                 
+                  <strong
+                    [class.balance-positive]="expense.netImpact > 0"
+                    [class.balance-negative]="expense.netImpact < 0"
+                    [class.balance-settled]="expense.netImpact === 0"
+                  >{{ formatExpenseNet(expense.netImpact) }}</strong>
+                </small>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
+</section>

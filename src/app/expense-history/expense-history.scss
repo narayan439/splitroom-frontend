@@ -18,11 +18,36 @@
 }
 
 .add-button {
+  display: inline-flex;
+  align-items: center;
   padding: 12px 18px;
   background: #2563eb;
   color: white;
   text-decoration: none;
   border-radius: 8px;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
+}
+
+.details-button {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
+  background: white;
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 }
 
 .summary-card {
@@ -89,6 +114,85 @@
   flex: 1;
 }
 
+.expense-details {
+  width: 100%;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+
+  h4 {
+    margin: 8px 0;
+  }
+
+  > p {
+    margin: 6px 0;
+    color: #4b5563;
+  }
+}
+
+.edit-permission {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.edit-form {
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
+  padding: 16px;
+  margin-top: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+
+  > label {
+    display: grid;
+    gap: 6px;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  input:not([type='checkbox']),
+  select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: white;
+    font: inherit;
+  }
+
+  fieldset {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+  }
+}
+
+.edit-member {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.success-message {
+  color: #15803d;
+}
+
+.error-message {
+  color: #b91c1c;
+}
+
 .expense-amount {
   text-align: right;
 }
@@ -107,11 +211,22 @@
 
   div {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
     padding: 6px 0;
     color: #4b5563;
     font-size: 13px;
+
+    > span {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    small {
+      color: #6b7280;
+    }
   }
 
   strong {
@@ -123,6 +238,20 @@
     color: #6b7280;
     font-size: 12px;
   }
+}
+
+.share-details__note {
+  margin: 0 0 8px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.balance-positive {
+  color: #15803d !important;
+}
+
+.balance-negative {
+  color: #b91c1c !important;
 }
 
 .empty-message {

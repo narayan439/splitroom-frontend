@@ -7,6 +7,11 @@ describe('ExpenseService', () => {
     service = new ExpenseService();
   });
 
+  it('starts without seeded expense or roommate demo data', () => {
+    expect(service.expenses).toEqual([]);
+    expect(service.roommateRules).toEqual([]);
+  });
+
   it('should calculate equal roommate shares for an expense', () => {
     const expense: Expense = {
       id: 10,
@@ -56,7 +61,7 @@ describe('ExpenseService', () => {
 
     expect(service.expenses[0]).toEqual({
       ...saved,
-      id: 5,
+      id: 1,
       roommates: ['Narayan', 'Rahul', 'Amit']
     });
     expect(service.getExpenseShares(saved).map(item => item.share)).toEqual([
