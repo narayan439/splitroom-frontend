@@ -10,6 +10,9 @@ export const environment = {
   production: true,
   apiUrl:
     typeof window === 'undefined'
-      ? ''
-      : (window.__SPLITROOM_CONFIG__?.apiUrl ?? '').replace(/\/+$/, ''),
+      ? 'https://splitroom-backend.onrender.com'
+      : (window.__SPLITROOM_CONFIG__?.apiUrl ?? 'https://splitroom-backend.onrender.com').replace(
+          /\/+$/,
+          '',
+        ),
 };

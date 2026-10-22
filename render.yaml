@@ -7,4 +7,4 @@ services:
     healthCheckPath: /healthz
     envVars:
       - key: RENDER_BACKEND_URL
-        sync: false
+        value: https://splitroom-backend.onrender.com

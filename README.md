@@ -172,9 +172,10 @@ Before the first production deployment:
    `https://splitroom-frontend.onrender.com` (no trailing slash).
 2. Create a Render Blueprint from this repository's `render.yaml`. Set
    `RENDER_BACKEND_URL` to the separately deployed API's HTTPS origin, without
-   an `/api` suffix. The build script requires this value and writes it into
-   the generated browser runtime config. Frontend environment values are
-   public; never put credentials or JWT signing keys there.
+   an `/api` suffix. It defaults to
+   `https://splitroom-backend.onrender.com`. The build script writes this public
+   URL into the generated browser runtime config. Frontend environment values
+   are public; never put credentials or JWT signing keys there.
 3. Test registration, login, protected room and expense requests, and a direct
    refresh of nested frontend routes with a non-production account.
 
