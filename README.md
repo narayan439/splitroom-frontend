@@ -105,16 +105,16 @@ secret.
 
 Required and optional variables:
 
-| Variable | Purpose | Development default |
-| --- | --- | --- |
-| `SPRING_DATASOURCE_URL` | MySQL JDBC URL | `jdbc:mysql://localhost:3306/splitroom_db` |
-| `SPRING_DATASOURCE_USERNAME` | MySQL application user | `splitroom_app` |
-| `SPRING_DATASOURCE_PASSWORD` | MySQL application password | Empty |
-| `APP_JWT_SECRET` | Base64-encoded random value of at least 32 bytes | Required |
-| `APP_JWT_EXPIRATION_SECONDS` | JWT lifetime in seconds | `3600` |
-| `SPRING_JPA_HIBERNATE_DDL_AUTO` | Local schema action | `validate` |
-| `APP_CORS_ALLOWED_ORIGINS` | Comma-separated exact frontend origins | Localhost development origins |
-| `APP_SWAGGER_ENABLED` | Expose Swagger/OpenAPI endpoints without login | `false` |
+| Variable                        | Purpose                                          | Development default                        |
+| ------------------------------- | ------------------------------------------------ | ------------------------------------------ |
+| `SPRING_DATASOURCE_URL`         | MySQL JDBC URL                                   | `jdbc:mysql://localhost:3306/splitroom_db` |
+| `SPRING_DATASOURCE_USERNAME`    | MySQL application user                           | `splitroom_app`                            |
+| `SPRING_DATASOURCE_PASSWORD`    | MySQL application password                       | Empty                                      |
+| `APP_JWT_SECRET`                | Base64-encoded random value of at least 32 bytes | Required                                   |
+| `APP_JWT_EXPIRATION_SECONDS`    | JWT lifetime in seconds                          | `3600`                                     |
+| `SPRING_JPA_HIBERNATE_DDL_AUTO` | Local schema action                              | `validate`                                 |
+| `APP_CORS_ALLOWED_ORIGINS`      | Comma-separated exact frontend origins           | Localhost development origins              |
+| `APP_SWAGGER_ENABLED`           | Expose Swagger/OpenAPI endpoints without login   | `false`                                    |
 
 Generate a new JWT key for each environment. For example, with OpenSSL:
 
@@ -138,7 +138,7 @@ The Angular source is at the repository root:
 
 ```powershell
 npm ci
-npm start
+npm run start:dev
 ```
 
 Development points to `http://localhost:8080` in
@@ -164,7 +164,8 @@ The root [`render.yaml`](./render.yaml) Blueprint defines two services:
 
 - `splitroom-api`, a Dockerized Spring Boot 17 web service with a database-backed
   `/healthz` check.
-- `splitroom-frontend`, an Angular static site with SPA route rewrites.
+- `splitroom-frontend`, a Node web service that serves the optimized Angular
+  build and supports SPA route fallback.
 
 The backend uses MySQL, while Render's managed relational database offering is
 PostgreSQL. Provision a MySQL-compatible database separately and use its
@@ -198,7 +199,10 @@ Before the first production deployment:
    protected room and expense requests, and a direct refresh of nested frontend
    routes with a non-production account.
 
-The frontend must be rebuilt after changing `RENDER_BACKEND_URL`. Restrict the
+The frontend starts with `npm start`, which serves the production build on the
+Render-assigned `PORT`. For local development, use `npm run start:dev` for
+Angular's development server. The frontend must be rebuilt after changing
+`RENDER_BACKEND_URL`. Restrict the
 database account to the application's required runtime privileges; use a
 separate privileged account for reviewed schema migrations. Render deployment
 and production database provisioning have not been run from this workspace.
