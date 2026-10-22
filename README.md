@@ -160,52 +160,28 @@ values shipped to the browser are public.
 
 ## Deploying to Render
 
-The root [`render.yaml`](./render.yaml) Blueprint defines two services:
-
-- `splitroom-api`, a Dockerized Spring Boot 17 web service with a database-backed
-  `/healthz` check.
-- `splitroom-frontend`, a Node web service that serves the optimized Angular
-  build and supports SPA route fallback.
-
-The backend uses MySQL, while Render's managed relational database offering is
-PostgreSQL. Provision a MySQL-compatible database separately and use its
-production connection details; do not point this application at Render
-PostgreSQL. Configure its network access so the Render API service can reach it
-over TLS.
+The root [`render.yaml`](./render.yaml) Blueprint deploys only the Angular
+frontend as a Node web service. The Spring Boot API is not deployed by this
+Blueprint; deploy it separately to a host that can connect to your MySQL
+database.
 
 Before the first production deployment:
 
-1. Back up the target MySQL database. Review and apply each required SQL
-   migration in `splitroom-backend/src/main/resources/db/migration/` using a
-   privileged migration account. For
-   `V20261021_01__one_room_per_user.sql`, inspect and safely resolve existing
-   duplicate memberships before applying its unique constraint. The application
-   does not automatically run these scripts.
-2. Create a Render Blueprint from this repository's `render.yaml`. When
-   prompted, set the backend's `SPRING_DATASOURCE_URL`,
-   `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD` using the
-   external MySQL provider's TLS-enabled connection configuration. Set
-   `APP_CORS_ALLOWED_ORIGINS` to the exact HTTPS origin of the frontend service,
-   such as `https://splitroom-frontend.onrender.com` (no trailing slash).
-3. Set the frontend service's `RENDER_BACKEND_URL` to the backend's public
-   HTTPS origin, such as `https://splitroom-api.onrender.com` (no `/api` suffix).
-   The build script requires this value and writes it into the generated
-   browser runtime config. Frontend environment values are public; never put
-   credentials or JWT signing keys there.
-4. Keep `APP_SWAGGER_ENABLED=false`. Render generates `APP_JWT_SECRET` for the
-   service; keep it stable across deployments because rotating it invalidates
-   active tokens.
-5. Wait for `/healthz` to report healthy, then test registration, login,
-   protected room and expense requests, and a direct refresh of nested frontend
-   routes with a non-production account.
+1. Deploy the API separately and configure its exact CORS allowlist to include
+   the frontend HTTPS origin, such as
+   `https://splitroom-frontend.onrender.com` (no trailing slash).
+2. Create a Render Blueprint from this repository's `render.yaml`. Set
+   `RENDER_BACKEND_URL` to the separately deployed API's HTTPS origin, without
+   an `/api` suffix. The build script requires this value and writes it into
+   the generated browser runtime config. Frontend environment values are
+   public; never put credentials or JWT signing keys there.
+3. Test registration, login, protected room and expense requests, and a direct
+   refresh of nested frontend routes with a non-production account.
 
 The frontend starts with `npm start`, which serves the production build on the
 Render-assigned `PORT`. For local development, use `npm run start:dev` for
 Angular's development server. The frontend must be rebuilt after changing
-`RENDER_BACKEND_URL`. Restrict the
-database account to the application's required runtime privileges; use a
-separate privileged account for reviewed schema migrations. Render deployment
-and production database provisioning have not been run from this workspace.
+`RENDER_BACKEND_URL`. Render deployment has not been run from this workspace.
 
 ## API documentation
 

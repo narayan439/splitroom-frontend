@@ -1,27 +1,5 @@
 services:
   - type: web
-    name: splitroom-api
-    runtime: docker
-    rootDir: splitroom-backend
-    dockerfilePath: ./Dockerfile
-    healthCheckPath: /healthz
-    envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: prod
-      - key: APP_JWT_SECRET
-        generateValue: true
-      - key: APP_SWAGGER_ENABLED
-        value: 'false'
-      - key: SPRING_DATASOURCE_URL
-        sync: false
-      - key: SPRING_DATASOURCE_USERNAME
-        sync: false
-      - key: SPRING_DATASOURCE_PASSWORD
-        sync: false
-      - key: APP_CORS_ALLOWED_ORIGINS
-        sync: false
-
-  - type: web
     name: splitroom-frontend
     runtime: node
     buildCommand: npm ci && npm run build:render
