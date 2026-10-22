@@ -10,8 +10,8 @@ export const environment = {
   production: true,
   apiUrl:
     typeof window === 'undefined'
-      ? 'https://splitroom-backend.onrender.com'
-      : (window.__SPLITROOM_CONFIG__?.apiUrl ?? 'https://splitroom-backend.onrender.com').replace(
+      ? 'https://splitroom-backend.vercel.app'
+      : (window.__SPLITROOM_CONFIG__?.apiUrl ?? 'https://splitroom-backend.vercel.app').replace(
           /\/+$/,
           '',
         ),
