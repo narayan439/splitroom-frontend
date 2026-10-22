@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://splitroom-backend.onrender.com',
+  apiUrl: 'http://localhost:8080',
 };
